@@ -31,9 +31,11 @@ Implemented in v0.1:
 
 ## Repository layout
 - `app/` Android app
-- `docs/` architecture + release notes
+- `docs/` product / architecture / trust-boundary / roadmap docs
 - `.github/workflows/android-release.yml` CI/CD for APK build + release asset publishing
 - `scripts/release.ps1` helper for tag-based release flow
+
+Start with [`docs/README.md`](./docs/README.md) for the doc-first reading path.
 
 ## Local development
 ### Requirements
