@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha6",
-  "version_name": "0.2.0-alpha6",
-  "version_code": 7,
-  "min_supported_version_code": 6,
+  "tag_name": "v0.2.0-alpha7",
+  "version_name": "0.2.0-alpha7",
+  "version_code": 8,
+  "min_supported_version_code": 7,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha6/android-companion-v0.2.0-alpha6.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha6",
-  "notes": "Adds Tailscale-first pairing import, in-app QR scanning, remote connection testing, and pairing payload hardening for the Android Companion remote bootstrap flow."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha7/android-companion-v0.2.0-alpha7.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha7",
+  "notes": "Adds QR image import for remote pairing and normalizes GitHub Releases to publish release APK assets for install and self-update."
 }

@@ -44,19 +44,14 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Build signed release APK when secrets exist
+      - name: Build release APK
         shell: bash
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/keystore.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            ./gradlew assembleRelease
-          else
-            echo "Skipping signed release build because signing secrets are not configured."
-          fi
+        run: ./gradlew assembleRelease
 
       - name: Prepare named APK asset
         id: pick_apk
@@ -65,6 +60,10 @@ jobs:
           mkdir -p dist
           if [ -f app/build/outputs/apk/release/app-release.apk ]; then
             cp app/build/outputs/apk/release/app-release.apk dist/android-companion-${GITHUB_REF_NAME}.apk
+            echo "asset_path=dist/android-companion-${GITHUB_REF_NAME}.apk" >> $GITHUB_OUTPUT
+            echo "asset_name=android-companion-${GITHUB_REF_NAME}.apk" >> $GITHUB_OUTPUT
+          elif [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            cp app/build/outputs/apk/release/app-release-unsigned.apk dist/android-companion-${GITHUB_REF_NAME}.apk
             echo "asset_path=dist/android-companion-${GITHUB_REF_NAME}.apk" >> $GITHUB_OUTPUT
             echo "asset_name=android-companion-${GITHUB_REF_NAME}.apk" >> $GITHUB_OUTPUT
           else

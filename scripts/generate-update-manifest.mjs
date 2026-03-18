@@ -21,7 +21,7 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv);
-const version = args.version || '0.2.0-alpha6';
+const version = args.version || '0.2.0-alpha7';
 const tag = version.startsWith('v') ? version : `v${version}`;
 const versionName = tag.replace(/^v/, '');
 const versionCode = Number(args.versionCode || 7);
