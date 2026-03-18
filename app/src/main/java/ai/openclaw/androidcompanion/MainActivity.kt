@@ -66,6 +66,10 @@ class MainActivity : AppCompatActivity() {
         binding.installTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = true) }
         binding.openTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = false) }
         binding.importPairingCodeButton.setOnClickListener { importPairingFromField() }
+        binding.testRemoteConnectionButton.setOnClickListener {
+            saveRemoteConfig()
+            testRemoteConnection()
+        }
 
         binding.saveRemoteConfigButton.setOnClickListener {
             saveRemoteConfig()
@@ -281,6 +285,25 @@ class MainActivity : AppCompatActivity() {
                     .registerDevice(engine.execute(CommandEnvelope("device_info", JSONObject(), null)))
             }.getOrElse {
                 JSONObject().put("ok", false).put("error", it.message ?: it.javaClass.simpleName)
+            }
+            runOnUiThread { renderStatus(result.toString(2)) }
+        }
+    }
+
+    private fun testRemoteConnection() {
+        val config = currentTransportConfig()
+        if (config.baseUrl.isBlank()) {
+            renderStatus(getString(R.string.status_base_url_required))
+            return
+        }
+        thread {
+            val result = runCatching {
+                ai.openclaw.androidcompanion.transport.RemoteTransportClient(config).testConnection()
+            }.getOrElse {
+                JSONObject()
+                    .put("ok", false)
+                    .put("base_url", config.baseUrl)
+                    .put("error", it.message ?: it.javaClass.simpleName)
             }
             runOnUiThread { renderStatus(result.toString(2)) }
         }

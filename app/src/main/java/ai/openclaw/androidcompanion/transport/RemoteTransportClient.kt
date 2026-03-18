@@ -9,6 +9,18 @@ import java.net.URL
 class RemoteTransportClient(
     private val config: TransportConfig
 ) {
+    fun testConnection(): JSONObject {
+        val url = URL("${config.baseUrl}/")
+        val connection = open(url, "GET")
+        val text = connection.inputStream.bufferedReader().use { it.readText() }
+        val json = runCatching { JSONObject(text) }.getOrElse { JSONObject().put("raw", text) }
+        return JSONObject()
+            .put("ok", true)
+            .put("base_url", config.baseUrl)
+            .put("status_code", connection.responseCode)
+            .put("response", json)
+    }
+
     fun registerDevice(deviceInfo: JSONObject): JSONObject {
         val body = JSONObject()
             .put("device_id", config.deviceId)

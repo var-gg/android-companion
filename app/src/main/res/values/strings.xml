@@ -41,6 +41,7 @@
     <string name="hint_token">Bearer token (optional; leave blank on local/LAN dev)</string>
     <string name="hint_poll_interval">Poll interval seconds (default 10)</string>
     <string name="save">Save</string>
+    <string name="test_connection">Test connection</string>
     <string name="register_device">Register device</string>
     <string name="start_remote">Start remote</string>
     <string name="stop_remote">Stop remote</string>

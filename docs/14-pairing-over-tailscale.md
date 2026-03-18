@@ -75,7 +75,7 @@ For now the easiest test path is:
 ## Recommended operator flow
 1. Make sure desktop Tailscale is online.
 2. Start the bridge server on desktop.
-3. Generate a pairing link with `scripts/generate-pairing-link.mjs`.
+3. Generate a pairing link with `scripts/generate-pairing-link.mjs` or a browser-ready QR page with `scripts/generate-pairing-page.mjs`.
 4. Show the link or QR on desktop.
 5. On Android, import the link.
 6. Verify imported base URL.
