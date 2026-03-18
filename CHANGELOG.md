@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0-alpha2
+- added in-app current version display
+- added Check update / Update now controls
+- added manifest-driven update policy via `update-manifest.json`
+- added soft-force update gating using `min_supported_version_code` and `force_update`
+- made self-update check return richer version/policy metadata
+- bumped app version to 0.2.0-alpha2
+
 ## v0.2.0-alpha1
 - added polling-based remote transport alpha
 - added remote config UI for base URL, device ID, bearer token, and poll interval

@@ -61,6 +61,14 @@ class AndroidCapabilityEngine(
         }
     }
 
+    fun appIdentity(): JSONObject {
+        val pkg = packageManager.getPackageInfoCompat(context.packageName)
+        return JSONObject()
+            .put("package_name", context.packageName)
+            .put("version_name", pkg.versionName)
+            .put("version_code", pkg.longVersionCode)
+    }
+
     private fun openUrl(command: CommandEnvelope): JSONObject {
         val url = command.params.optString("url")
         if (url.isBlank()) return jsonError(command, "missing_url", "params.url is required")
@@ -182,13 +190,46 @@ class AndroidCapabilityEngine(
     }
 
     private fun checkSelfUpdate(command: CommandEnvelope): JSONObject {
-        val releaseApiUrl = command.params.optString(
-            "release_api_url",
-            "https://api.github.com/repos/var-gg/android-companion/releases/latest"
+        val releaseApiUrl = command.params.optString("release_api_url")
+        val manifestUrl = command.params.optString(
+            "manifest_url",
+            "https://raw.githubusercontent.com/var-gg/android-companion/main/update-manifest.json"
         )
-        val response = fetchJson(releaseApiUrl)
+        val current = appIdentity()
+        val currentVersionName = current.optString("version_name")
+        val currentVersionCode = current.optLong("version_code")
+
+        val manifestResult = runCatching { fetchJson(manifestUrl) }.getOrNull()
+        if (manifestResult != null) {
+            val latestVersionName = manifestResult.optString("version_name", manifestResult.optString("tag_name"))
+            val latestVersionCode = manifestResult.optLong("version_code", currentVersionCode)
+            val minSupportedVersionCode = manifestResult.optLong("min_supported_version_code", 0L)
+            val forceUpdate = manifestResult.optBoolean("force_update", false)
+            val updateAvailable = latestVersionName.isNotBlank() && latestVersionName != currentVersionName
+            val supported = minSupportedVersionCode <= 0L || currentVersionCode >= minSupportedVersionCode
+            return okAction(command)
+                .put("current_version", currentVersionName)
+                .put("current_version_code", currentVersionCode)
+                .put("latest_version", latestVersionName)
+                .put("latest_version_code", latestVersionCode)
+                .put("min_supported_version_code", minSupportedVersionCode)
+                .put("force_update", forceUpdate)
+                .put("supported", supported)
+                .put("update_available", updateAvailable)
+                .put("apk_url", manifestResult.optString("apk_url"))
+                .put("release_url", manifestResult.optString("release_url"))
+                .put("manifest_url", manifestUrl)
+                .put("notes", manifestResult.optString("notes"))
+                .put("source", "manifest")
+        }
+
+        val resolvedReleaseApiUrl = if (releaseApiUrl.isBlank()) {
+            "https://api.github.com/repos/var-gg/android-companion/releases/latest"
+        } else {
+            releaseApiUrl
+        }
+        val response = fetchJson(resolvedReleaseApiUrl)
         val latestTag = response.optString("tag_name")
-        val currentVersion = packageManager.getPackageInfoCompat(context.packageName).versionName ?: "0.0.0"
         val assets = response.optJSONArray("assets") ?: JSONArray()
         var apkUrl: String? = null
         for (i in 0 until assets.length()) {
@@ -199,11 +240,16 @@ class AndroidCapabilityEngine(
             }
         }
         return okAction(command)
-            .put("current_version", currentVersion)
+            .put("current_version", currentVersionName)
+            .put("current_version_code", currentVersionCode)
             .put("latest_version", latestTag)
-            .put("update_available", latestTag.isNotBlank() && latestTag != currentVersion)
+            .put("update_available", latestTag.isNotBlank() && latestTag != currentVersionName)
             .put("apk_url", apkUrl)
             .put("release_url", response.optString("html_url"))
+            .put("release_api_url", resolvedReleaseApiUrl)
+            .put("force_update", false)
+            .put("supported", true)
+            .put("source", "github_release")
     }
 
     private fun downloadSelfUpdate(command: CommandEnvelope): JSONObject {
@@ -260,14 +306,6 @@ class AndroidCapabilityEngine(
         .put("brand", Build.BRAND)
         .put("model", Build.MODEL)
         .put("sdk_int", Build.VERSION.SDK_INT)
-
-    private fun appIdentity(): JSONObject {
-        val pkg = packageManager.getPackageInfoCompat(context.packageName)
-        return JSONObject()
-            .put("package_name", context.packageName)
-            .put("version_name", pkg.versionName)
-            .put("version_code", pkg.longVersionCode)
-    }
 
     private fun okAction(command: CommandEnvelope): JSONObject = JSONObject()
         .put("ok", true)

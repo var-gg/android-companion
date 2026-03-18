@@ -1,4 +1,4 @@
-# Android Companion (v0.2.0-alpha1)
+# Android Companion (v0.2.0-alpha2)
 
 Thin Android runtime / executor for a personal agent system.
 
@@ -9,7 +9,7 @@ This app is intentionally **not** a fat automation brain. It is a small Android-
 - leaves orchestration and decision logic to desktop/server agents.
 
 ## MVP scope
-Implemented in v0.2.0-alpha1:
+Implemented in v0.2.0-alpha2:
 1. `health_ping`
 2. `device_info`
 3. `open_url`
@@ -25,6 +25,9 @@ Implemented in v0.2.0-alpha1:
 13. Remote transport config UI
 14. Polling-based remote command fetch / result upload alpha
 15. Foreground remote polling service
+16. Current app version display
+17. Check update / Update now controls
+18. Manifest-driven soft-force update policy
 
 ## Product principles
 - Thin runtime on device
@@ -209,6 +212,18 @@ Legacy flat v0.1 shape is still accepted for backward compatibility.
   "timestamp": "2026-03-17T09:00:00Z"
 }
 ```
+
+## Update model
+The app now supports a simple in-app update UX for sideload releases:
+- shows current installed version and versionCode
+- checks `update-manifest.json` first for update policy
+- supports `force_update` and `min_supported_version_code` soft-gating
+- can download the latest APK and open Android's install prompt
+
+Current manifest source:
+- `https://raw.githubusercontent.com/var-gg/android-companion/main/update-manifest.json`
+
+Soft-force update means the app can block normal command execution and remote start/register actions until the minimum supported version is installed, while still allowing update actions.
 
 ## Remote control alpha
 The app now includes a polling-based remote transport alpha:

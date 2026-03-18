@@ -23,6 +23,61 @@
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
+            android:id="@+id/versionOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/result_background"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:text="Current version: loading"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Update control"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/checkUpdateButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Check update" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/updateNowButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Update now" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/updateStatusOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/result_background"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:text="Update status unknown"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
