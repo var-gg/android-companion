@@ -4,7 +4,7 @@
   "version_code": 7,
   "min_supported_version_code": 6,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha6/android-companion-v0.2.0-alpha6-debug.apk",
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha6/android-companion-v0.2.0-alpha6.apk",
   "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha6",
   "notes": "Adds Tailscale-first pairing import, in-app QR scanning, remote connection testing, and pairing payload hardening for the Android Companion remote bootstrap flow."
 }

@@ -280,6 +280,16 @@
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/importPairingImageButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/import_pairing_image" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/importPairingCodeButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"

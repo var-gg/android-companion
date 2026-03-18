@@ -34,6 +34,7 @@
     <string name="tailscale_status_missing">이 휴대폰에서 Tailscale이 감지되지 않았습니다</string>
     <string name="hint_pairing_code">페어링 코드 또는 acpair 링크</string>
     <string name="scan_pairing_qr">페어링 QR 스캔</string>
+    <string name="import_pairing_image">QR 이미지 가져오기</string>
     <string name="import_pairing_code">페어링 코드 가져오기</string>
     <string name="qr_scan_prompt">안드로이드 컴패니언 페어링 QR을 스캔하세요</string>
     <string name="remote_section_title">원격 연결</string>
@@ -65,6 +66,8 @@
     <string name="status_base_url_required">기기 등록 전에 Base URL이 필요합니다</string>
     <string name="status_pairing_code_required">먼저 페어링 코드를 붙여넣으세요</string>
     <string name="status_qr_scan_cancelled">QR 스캔이 취소되었습니다</string>
+    <string name="status_pairing_image_cancelled">이미지 가져오기가 취소되었습니다</string>
+    <string name="status_no_qr_found_in_image">선택한 이미지에서 QR 코드를 찾지 못했습니다</string>
     <string name="status_pairing_import_failed">페어링 가져오기에 실패했습니다: %1$s</string>
     <string name="status_pairing_expired">이 페어링 코드는 만료되었습니다</string>
     <string name="status_pairing_imported">%1$s (%2$s)용 페어링을 가져왔습니다</string>

@@ -63,13 +63,14 @@ The app now supports:
 - Tailscale install/open buttons
 - package detection for `com.tailscale.ipn`
 - in-app QR scanning for pairing codes
+- QR import from a screenshot or image file
 - manual pairing code import
 - `acpair://` deep-link import into MainActivity
 - auto-fill for base URL / token / poll interval / suggested device id
 
 Current easiest test path:
 - render the pairing link as a QR or clickable link on desktop
-- scan it in Android Companion or open it as a deep link
+- scan it in Android Companion, import a screenshot image, or open it as a deep link
 - let the app fill the remote config
 
 ## Recommended operator flow

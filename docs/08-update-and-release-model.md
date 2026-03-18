@@ -12,7 +12,7 @@ The public install path should assume GitHub Release first, then in-app self-upd
 
 ## Signing model
 If Android signing secrets are configured in GitHub, CI can produce a signed release APK.
-If not, CI still publishes a debug APK so testing/install distribution is not blocked.
+The intended install/update path is the signed release package. Debug artifacts should not be treated as the normal user update channel.
 
 ## App-side self-update flow
 1. App calls `releases/latest` GitHub API endpoint.

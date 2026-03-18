@@ -4,12 +4,19 @@ import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.NotFoundException
+import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.client.android.Intents
+import com.google.zxing.common.HybridBinarizer
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
@@ -53,6 +60,16 @@ class MainActivity : AppCompatActivity() {
         importPairingPayload(raw)
     }
 
+    private val pairingImagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri == null) {
+            renderStatus(getString(R.string.status_pairing_image_cancelled))
+            return@registerForActivityResult
+        }
+        importPairingFromImage(uri)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageSettings.applySaved(this)
         super.onCreate(savedInstanceState)
@@ -79,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         binding.installTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = true) }
         binding.openTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = false) }
         binding.scanPairingQrButton.setOnClickListener { launchPairingQrScanner() }
+        binding.importPairingImageButton.setOnClickListener { pairingImagePickerLauncher.launch("image/*") }
         binding.importPairingCodeButton.setOnClickListener { importPairingFromField() }
         binding.testRemoteConnectionButton.setOnClickListener {
             saveRemoteConfig()
@@ -212,6 +230,24 @@ class MainActivity : AppCompatActivity() {
         qrScanLauncher.launch(options)
     }
 
+    private fun importPairingFromImage(uri: Uri) {
+        thread {
+            val result = runCatching {
+                val raw = decodeQrTextFromImage(uri)
+                if (raw.isBlank()) throw IllegalArgumentException(getString(R.string.status_no_qr_found_in_image))
+                runOnUiThread {
+                    binding.pairingCodeInput.setText(raw)
+                    importPairingPayload(raw)
+                }
+            }.exceptionOrNull()
+            if (result != null) {
+                runOnUiThread {
+                    renderStatus(getString(R.string.status_pairing_import_failed, result.message ?: result.javaClass.simpleName))
+                }
+            }
+        }
+    }
+
     private fun importPairingFromField() {
         val raw = binding.pairingCodeInput.text?.toString().orEmpty().trim()
         if (raw.isBlank()) {
@@ -249,6 +285,30 @@ class MainActivity : AppCompatActivity() {
         binding.pairingCodeInput.setText(raw)
         saveRemoteConfig()
         renderStatus(getString(R.string.status_pairing_imported, payload.label, payload.transport.mode) + "\n" + payload.summary())
+    }
+
+    private fun decodeQrTextFromImage(uri: Uri): String {
+        val source = ImageDecoder.createSource(contentResolver, uri)
+        val bitmap = ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+            decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE)
+        }.copy(Bitmap.Config.ARGB_8888, false)
+
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        val binaryBitmap = BinaryBitmap(
+            HybridBinarizer(
+                RGBLuminanceSource(width, height, pixels)
+            )
+        )
+
+        return try {
+            MultiFormatReader().decode(binaryBitmap).text.orEmpty().trim()
+        } catch (_: NotFoundException) {
+            ""
+        }
     }
 
     private fun isPackageInstalled(packageName: String): Boolean {

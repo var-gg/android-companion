@@ -41,5 +41,6 @@ Ship Android Companion through GitHub Releases as the primary public install pat
 
 ## Notes
 - GitHub Releases are the primary install path.
+- In-app self-update should target the release package path.
 - ADB is optional developer tooling, not the core user install path.
-- If signing secrets are absent, CI may publish a debug APK for install/testing.
+- QR pairing can come from live scan, pasted link text, or a screenshot/image import.

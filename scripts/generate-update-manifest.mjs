@@ -27,7 +27,7 @@ const versionName = tag.replace(/^v/, '');
 const versionCode = Number(args.versionCode || 7);
 const minSupportedVersionCode = Number(args.minSupportedVersionCode || versionCode - 1);
 const forceUpdate = (args.forceUpdate || 'false') === 'true';
-const debug = (args.debug || 'true') === 'true';
+const debug = (args.debug || 'false') === 'true';
 const assetName = debug ? `android-companion-${tag}-debug.apk` : `android-companion-${tag}.apk`;
 const repo = args.repo || 'var-gg/android-companion';
 const notes = args.notes || 'Adds Tailscale-first pairing import, in-app QR scanning, remote connection testing, and pairing payload hardening for the Android Companion remote bootstrap flow.';

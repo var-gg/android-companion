@@ -68,7 +68,7 @@ adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
 ### Preferred public install path
-Use the GitHub Release APK for normal user installation.
+Use the signed GitHub Release APK for normal user installation and in-app self-update.
 ADB is developer tooling, not the primary install path.
 
 ## Permission notes
