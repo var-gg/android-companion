@@ -234,7 +234,9 @@ The app includes a polling-based remote transport alpha:
 
 Reference:
 - [`docs/13-remote-transport-alpha.md`](./docs/13-remote-transport-alpha.md)
+- [`docs/14-pairing-over-tailscale.md`](./docs/14-pairing-over-tailscale.md)
 - [`scripts/mock-remote-bridge.mjs`](./scripts/mock-remote-bridge.mjs)
+- [`scripts/generate-pairing-link.mjs`](./scripts/generate-pairing-link.mjs)
 
 ### Persistence model
 Transport settings are stored in app-local persistent storage.

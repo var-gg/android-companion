@@ -1,7 +1,10 @@
 package ai.openclaw.androidcompanion
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,6 +13,7 @@ import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.databinding.ActivityMainBinding
 import ai.openclaw.androidcompanion.logging.CommandLogStore
+import ai.openclaw.androidcompanion.pairing.PairingPayload
 import ai.openclaw.androidcompanion.settings.LanguageSettings
 import ai.openclaw.androidcompanion.settings.PermissionStatus
 import ai.openclaw.androidcompanion.transport.RemotePollingService
@@ -59,6 +63,10 @@ class MainActivity : AppCompatActivity() {
         binding.checkUpdateButton.setOnClickListener { checkUpdateNow() }
         binding.updateNowButton.setOnClickListener { triggerUpdateNow() }
 
+        binding.installTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = true) }
+        binding.openTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = false) }
+        binding.importPairingCodeButton.setOnClickListener { importPairingFromField() }
+
         binding.saveRemoteConfigButton.setOnClickListener {
             saveRemoteConfig()
             renderStatus(getString(R.string.status_remote_config_saved))
@@ -83,12 +91,16 @@ class MainActivity : AppCompatActivity() {
         renderVersionInfo()
         renderPermissionStatus()
         renderRecentCommands()
+        renderTailscaleStatus()
+        handlePairingIntent(intent)
         checkUpdateNow(silent = true)
     }
 
     override fun onResume() {
         super.onResume()
         renderPermissionStatus()
+        renderTailscaleStatus()
+        handlePairingIntent(intent)
     }
 
     private fun setupLanguageControls() {
@@ -146,6 +158,80 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.permission_status_format, getString(R.string.battery_optimization_label), if (snapshot.ignoringBatteryOptimizations) enabled else disabled)
         )
         binding.permissionStatusOutput.text = lines.joinToString("\n")
+    }
+
+    private fun renderTailscaleStatus() {
+        val installed = isPackageInstalled(TAILSCALE_PACKAGE)
+        binding.tailscaleStatusOutput.text = if (installed) {
+            getString(R.string.tailscale_status_installed)
+        } else {
+            getString(R.string.tailscale_status_missing)
+        }
+        binding.openTailscaleButton.isEnabled = installed
+    }
+
+    private fun installOrOpenTailscale(forceStore: Boolean) {
+        val installed = isPackageInstalled(TAILSCALE_PACKAGE)
+        val intent = when {
+            installed && !forceStore -> packageManager.getLaunchIntentForPackage(TAILSCALE_PACKAGE)
+            else -> Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$TAILSCALE_PACKAGE"))
+        } ?: Intent(Intent.ACTION_VIEW, Uri.parse(TAILSCALE_PLAY_STORE_WEB_URL))
+
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TAILSCALE_PLAY_STORE_WEB_URL)))
+        }
+    }
+
+    private fun importPairingFromField() {
+        val raw = binding.pairingCodeInput.text?.toString().orEmpty().trim()
+        if (raw.isBlank()) {
+            renderStatus(getString(R.string.status_pairing_code_required))
+            return
+        }
+        importPairingPayload(raw)
+    }
+
+    private fun handlePairingIntent(intent: Intent?) {
+        val data = intent?.dataString?.trim().orEmpty()
+        if (!data.startsWith("acpair://", ignoreCase = true)) return
+        importPairingPayload(data)
+        val clearedIntent = Intent(intent)
+        clearedIntent.data = null
+        setIntent(clearedIntent)
+    }
+
+    private fun importPairingPayload(raw: String) {
+        val payload = runCatching { PairingPayload.parse(raw) }.getOrElse {
+            renderStatus(getString(R.string.status_pairing_import_failed, it.message ?: it.javaClass.simpleName))
+            return
+        }
+        if (payload.isExpired()) {
+            renderStatus(getString(R.string.status_pairing_expired))
+            return
+        }
+
+        binding.remoteBaseUrlInput.setText(payload.transport.baseUrl)
+        binding.remoteTokenInput.setText(payload.transport.token)
+        binding.remotePollSecondsInput.setText(payload.transport.pollIntervalSeconds.toString())
+        if (binding.remoteDeviceIdInput.text.isNullOrBlank() && payload.device.suggestedDeviceId.isNotBlank()) {
+            binding.remoteDeviceIdInput.setText(payload.device.suggestedDeviceId)
+        }
+        binding.pairingCodeInput.setText(raw)
+        saveRemoteConfig()
+        renderStatus(getString(R.string.status_pairing_imported, payload.label, payload.transport.mode) + "\n" + payload.summary())
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return runCatching {
+            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            true
+        }.recoverCatching {
+            @Suppress("DEPRECATION")
+            packageManager.getPackageInfo(packageName, 0)
+            true
+        }.getOrDefault(false)
     }
 
     private fun executeCommand(raw: String) {
@@ -350,4 +436,9 @@ class MainActivity : AppCompatActivity() {
           }
         }
     """.trimIndent()
+
+    companion object {
+        private const val TAILSCALE_PACKAGE = "com.tailscale.ipn"
+        private const val TAILSCALE_PLAY_STORE_WEB_URL = "https://play.google.com/store/apps/details?id=com.tailscale.ipn"
+    }
 }

@@ -24,6 +24,7 @@ It should remain understandable as a device capability surface, not drift into a
 8. [11-implementation-roadmap.md](./11-implementation-roadmap.md)
 9. [12-backlog.md](./12-backlog.md)
 10. [13-remote-transport-alpha.md](./13-remote-transport-alpha.md)
+11. [14-pairing-over-tailscale.md](./14-pairing-over-tailscale.md)
 
 ## Reading layers
 
@@ -41,6 +42,7 @@ Read:
 3. [08-update-and-release-model.md](./08-update-and-release-model.md)
 4. [09-module-boundaries.md](./09-module-boundaries.md)
 5. [13-remote-transport-alpha.md](./13-remote-transport-alpha.md)
+6. [14-pairing-over-tailscale.md](./14-pairing-over-tailscale.md)
 
 ### If you want trust, permissions, and risk
 Read:
@@ -76,6 +78,7 @@ Read:
 - [11-implementation-roadmap.md](./11-implementation-roadmap.md) — phased build path
 - [12-backlog.md](./12-backlog.md) — near-term open work
 - [13-remote-transport-alpha.md](./13-remote-transport-alpha.md) — polling-based remote control alpha contract
+- [14-pairing-over-tailscale.md](./14-pairing-over-tailscale.md) — Tailscale-first pairing bootstrap and acpair link contract
 
 ## Reading philosophy
 If you only read one product document, read [00-overview.md](./00-overview.md).
