@@ -1,4 +1,4 @@
-# Android Companion (v0.2.0-alpha2)
+# Android Companion (v0.2.0-alpha4)
 
 Thin Android runtime / executor for a personal agent system.
 
@@ -226,7 +226,7 @@ Current manifest source:
 Soft-force update means the app can block normal command execution and remote start/register actions until the minimum supported version is installed, while still allowing update actions.
 
 ## Remote control alpha
-The app now includes a polling-based remote transport alpha:
+The app includes a polling-based remote transport alpha:
 - configure base URL / device ID / bearer token / poll interval in the app
 - register the device to a bridge endpoint
 - start the foreground polling service
@@ -236,11 +236,60 @@ Reference:
 - [`docs/13-remote-transport-alpha.md`](./docs/13-remote-transport-alpha.md)
 - [`scripts/mock-remote-bridge.mjs`](./scripts/mock-remote-bridge.mjs)
 
+### Persistence model
+Transport settings are stored in app-local persistent storage.
+This is the recommended default for a public sideloaded Android companion app:
+- `base_url`: persisted
+- `device_id`: persisted
+- `poll_interval_seconds`: persisted
+- `token`: currently persisted in app storage
+
+Notes:
+- `device_id` is auto-generated on first load if the field is empty.
+- Normal app updates should preserve stored settings.
+- App uninstall, package name changes, or switching between different package ids can reset stored data.
+- For long-term hardening, sensitive values like tokens should move to encrypted storage / Keystore-backed storage.
+
+### Agent-oriented setup contract
+Assume many users of this app will also use an AI agent system such as OpenClaw.
+An AI agent helping a user set up this app should gather or derive these values and then give the user copy/paste-ready inputs.
+
+Required inputs for the app:
+1. `Remote Base URL`
+2. `Device ID`
+3. `Bearer Token` (recommended; effectively required for any non-trusted network)
+4. `Poll interval seconds`
+
+### What an agent should provide to the user
+When assisting with setup, the agent should explicitly provide:
+- the exact `Remote Base URL` to paste into the app
+- the exact `Device ID` to use, or tell the user to keep the auto-generated value
+- the exact `Bearer Token` to paste, if auth is enabled
+- the recommended `Poll interval seconds`
+- whether the bridge is LAN-only, reverse-proxied, or public
+- whether additional Android permissions/settings should be enabled for stable polling
+
+### Recommended operator flow
+1. Start or identify the bridge endpoint.
+2. Determine the phone-reachable URL.
+3. Choose a stable `device_id`.
+4. Generate or retrieve a bearer token.
+5. Tell the user exactly what to paste into each app field.
+6. Ask the user to tap `Save`, `Register device`, and `Start remote`.
+7. Validate that the bridge sees the device and that commands round-trip successfully.
+
 ### Quick local bridge test
+Start a local mock bridge on the desktop:
 ```powershell
 $env:ANDROID_COMPANION_TOKEN = "dev-secret"
 node .\scripts\mock-remote-bridge.mjs
 ```
+
+Then provide these values to the user:
+- `Remote Base URL`: `http://<desktop-ip>:8787`
+- `Device ID`: keep the app-generated value or choose a stable name like `android-main-phone`
+- `Bearer Token`: `dev-secret`
+- `Poll interval seconds`: `10`
 
 Then enqueue a command from desktop:
 ```powershell
