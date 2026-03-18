@@ -7,6 +7,7 @@ const token = process.env.ANDROID_COMPANION_TOKEN || '';
 const devices = new Map();
 const queues = new Map();
 const results = [];
+const commandHistory = [];
 
 function send(res, code, body) {
   const text = JSON.stringify(body, null, 2);
@@ -52,6 +53,7 @@ const server = http.createServer(async (req, res) => {
         devices: Array.from(devices.keys()),
         queuedCommands: Array.from(queues.entries()).map(([deviceId, items]) => ({ deviceId, count: items.length })),
         resultCount: results.length,
+        commandHistoryCount: commandHistory.length,
       });
     }
 
@@ -76,6 +78,16 @@ const server = http.createServer(async (req, res) => {
       const queue = queues.get(deviceId) || [];
       const command = queue.shift() || null;
       queues.set(deviceId, queue);
+      if (command) {
+        commandHistory.unshift({
+          event: 'delivered',
+          device_id: deviceId,
+          command_id: command.id,
+          request_id: command.request_id,
+          action: command.action,
+          at: new Date().toISOString(),
+        });
+      }
       return send(res, 200, { ok: true, command });
     }
 
@@ -92,23 +104,43 @@ const server = http.createServer(async (req, res) => {
       };
       queue.push(command);
       queues.set(deviceId, queue);
+      commandHistory.unshift({
+        event: 'enqueued',
+        device_id: deviceId,
+        command,
+        at: new Date().toISOString(),
+      });
       return send(res, 200, { ok: true, command });
     }
 
     const resultMatch = url.pathname.match(/^\/api\/v1\/commands\/([^/]+)\/result$/);
     if (req.method === 'POST' && resultMatch) {
       const body = await readJson(req);
-      results.unshift({
+      const item = {
         command_id: resultMatch[1],
         device_id: body.device_id,
         result: body.result,
         received_at: new Date().toISOString(),
+      };
+      results.unshift(item);
+      commandHistory.unshift({
+        event: 'result',
+        device_id: body.device_id,
+        command_id: resultMatch[1],
+        request_id: body.result?.request_id || null,
+        action: body.result?.action || null,
+        ok: body.result?.ok ?? null,
+        at: item.received_at,
       });
       return send(res, 200, { ok: true, stored: true });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/v1/results') {
       return send(res, 200, { ok: true, results });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/v1/history') {
+      return send(res, 200, { ok: true, history: commandHistory });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/v1/devices') {

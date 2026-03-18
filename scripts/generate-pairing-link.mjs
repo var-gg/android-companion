@@ -46,6 +46,11 @@ const expiresMinutes = Math.max(1, Number(args.expiresMinutes || 30));
 const generatedAt = new Date();
 const expiresAt = new Date(generatedAt.getTime() + expiresMinutes * 60 * 1000);
 
+if (token && !args.expiresMinutes) {
+  console.error('When --token is provided, also pass --expiresMinutes for an explicit short-lived pairing window.');
+  process.exit(1);
+}
+
 const payload = {
   type: 'android-companion-pairing',
   version: 1,

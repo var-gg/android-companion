@@ -86,8 +86,10 @@ Current easiest test path:
 Current alpha posture:
 - Tailscale strongly preferred
 - bearer token optional for local/dev bridge mode
-- use short expiry when including tokens in pairing payloads
-- expired payloads should be rejected by the app
+- token-bearing pairing payloads must include `meta.expires_at`
+- the app rejects expired payloads
+- the app rejects unsupported transport modes
+- `tailscale` mode should point at a Tailscale IP or MagicDNS hostname, not a private LAN IP
 
 Future hardening:
 - signed payloads

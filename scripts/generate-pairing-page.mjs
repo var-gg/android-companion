@@ -69,6 +69,11 @@ function buildPayload(args) {
 }
 
 const args = parseArgs(process.argv);
+if (args.token && !args.expiresMinutes) {
+  console.error('When --token is provided, also pass --expiresMinutes for an explicit short-lived pairing window.');
+  process.exit(1);
+}
+
 const payload = buildPayload(args);
 const link = `acpair://v1/${base64url(JSON.stringify(payload))}`;
 const outPath = path.resolve(args.out || path.join(process.cwd(), 'tmp', 'android-companion-pairing.html'));

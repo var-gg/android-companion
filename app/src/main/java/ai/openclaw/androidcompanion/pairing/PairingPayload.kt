@@ -5,6 +5,7 @@ import android.util.Base64
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.Locale
 
 data class PairingTransport(
     val mode: String,
@@ -52,6 +53,14 @@ data class PairingPayload(
         const val TYPE = "android-companion-pairing"
         private const val PREFIX = "acpair://v1/"
 
+        private fun isPrivateLanHost(host: String): Boolean {
+            return host.startsWith("192.168.") ||
+                host.startsWith("10.") ||
+                host.matches(Regex("172\\.(1[6-9]|2[0-9]|3[0-1])\\..*")) ||
+                host.equals("localhost", ignoreCase = true) ||
+                host.equals("127.0.0.1")
+        }
+
         fun parse(raw: String): PairingPayload {
             val jsonText = when {
                 raw.startsWith(PREFIX, ignoreCase = true) -> {
@@ -75,18 +84,33 @@ data class PairingPayload(
             val baseUrl = transportJson.optString("base_url").trim().removeSuffix("/")
             if (baseUrl.isBlank()) throw IllegalArgumentException("Missing transport.base_url")
             val uri = Uri.parse(baseUrl)
-            val scheme = uri.scheme.orEmpty().lowercase()
+            val scheme = uri.scheme.orEmpty().lowercase(Locale.ROOT)
             if (scheme != "http" && scheme != "https") throw IllegalArgumentException("base_url must use http or https")
+            val host = uri.host.orEmpty()
+            if (host.isBlank()) throw IllegalArgumentException("base_url must include a host")
+
+            val mode = transportJson.optString("mode").ifBlank { "tailscale" }.lowercase(Locale.ROOT)
+            if (mode !in setOf("tailscale", "lan")) throw IllegalArgumentException("transport.mode must be tailscale or lan")
+
+            val token = transportJson.optString("token").trim()
+            val pollIntervalSeconds = transportJson.optLong("poll_interval_seconds", 10L).coerceAtLeast(10L)
+            val expiresAt = metaJson.optString("expires_at").ifBlank { null }
+            if (token.isNotBlank() && expiresAt == null) {
+                throw IllegalArgumentException("token-bearing pairing payloads must include meta.expires_at")
+            }
+            if (mode == "tailscale" && isPrivateLanHost(host)) {
+                throw IllegalArgumentException("tailscale mode expects a Tailscale host or MagicDNS name, not a private LAN IP")
+            }
 
             return PairingPayload(
                 type = type,
                 version = version,
                 label = json.optString("label").ifBlank { "Desktop" },
                 transport = PairingTransport(
-                    mode = transportJson.optString("mode").ifBlank { "tailscale" },
+                    mode = mode,
                     baseUrl = baseUrl,
-                    token = transportJson.optString("token"),
-                    pollIntervalSeconds = transportJson.optLong("poll_interval_seconds", 10L).coerceAtLeast(10L)
+                    token = token,
+                    pollIntervalSeconds = pollIntervalSeconds
                 ),
                 device = PairingDevice(
                     suggestedDeviceId = deviceJson.optString("suggested_device_id")
