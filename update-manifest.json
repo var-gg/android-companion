@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha4",
-  "version_name": "0.2.0-alpha4",
-  "version_code": 5,
+  "tag_name": "v0.2.0-alpha5",
+  "version_name": "0.2.0-alpha5",
+  "version_code": 6,
   "min_supported_version_code": 5,
-  "force_update": true,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha4/android-companion-v0.2.0-alpha4-debug.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha4",
-  "notes": "Fixes release asset naming so in-app update links resolve correctly and adds APK reachability checks for update diagnostics."
+  "force_update": false,
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha5/android-companion-v0.2.0-alpha5-debug.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha5",
+  "notes": "Makes LAN remote setup base-url first, treats bearer token as optional for local dev, auto-registers on remote start, and fixes update gating so remote controls are not disabled unnecessarily."
 }

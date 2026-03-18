@@ -205,7 +205,11 @@ class AndroidCapabilityEngine(
             val latestVersionCode = manifestResult.optLong("version_code", currentVersionCode)
             val minSupportedVersionCode = manifestResult.optLong("min_supported_version_code", 0L)
             val forceUpdate = manifestResult.optBoolean("force_update", false)
-            val updateAvailable = latestVersionName.isNotBlank() && latestVersionName != currentVersionName
+            val updateAvailable = when {
+                latestVersionCode > 0L -> latestVersionCode > currentVersionCode
+                latestVersionName.isNotBlank() -> latestVersionName != currentVersionName
+                else -> false
+            }
             val supported = minSupportedVersionCode <= 0L || currentVersionCode >= minSupportedVersionCode
             val apkUrl = manifestResult.optString("apk_url")
             val apkReachable = if (apkUrl.isNotBlank()) isUrlReachable(apkUrl) else false

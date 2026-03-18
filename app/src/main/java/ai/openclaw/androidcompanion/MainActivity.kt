@@ -301,8 +301,8 @@ class MainActivity : AppCompatActivity() {
 
         val blocked = !policy.supported || (policy.forceUpdate && policy.updateAvailable)
         binding.executeButton.isEnabled = !blocked
-        binding.startRemoteButton.isEnabled = !blocked
-        binding.registerRemoteButton.isEnabled = !blocked
+        binding.startRemoteButton.isEnabled = true
+        binding.registerRemoteButton.isEnabled = true
         binding.commandInput.isEnabled = !blocked
         if (blocked) {
             binding.remoteStatusOutput.text = getString(R.string.status_soft_force_active)
