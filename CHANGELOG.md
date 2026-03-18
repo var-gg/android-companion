@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.0-alpha5
+- made LAN remote setup base-url first so local testing no longer assumes a bearer token
+- treated bearer token as optional for local/LAN dev mode in app copy and docs
+- defaulted remote polling interval to 10 seconds for quicker connection tests
+- auto-registers the device when remote polling starts
+- fixed update gating so Remote Start / Register are not disabled unnecessarily
+- updated manifest metadata for alpha5
+- bumped app version to 0.2.0-alpha5
+
 ## v0.2.0-alpha4
 - fixed GitHub release workflow so uploaded release assets use the same versioned filename referenced by the update manifest
 - updated update manifest for alpha4 with a correct versioned APK URL
