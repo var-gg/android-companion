@@ -323,24 +323,26 @@ Workflow: `.github/workflows/android-release.yml`
 - manual workflow dispatch
 
 ### Behavior
-- builds debug APK always
-- builds signed release APK when signing secrets are configured
-- uploads APK as workflow artifact
-- on tag push, publishes the APK into GitHub Releases
+- manual workflow runs may build debug artifacts for local/dev testing
+- tag releases build and publish **signed release APKs only**
+- if signing secrets are missing on a tag release, CI fails instead of publishing a broken unsigned/debug public asset
+- on tag push, the signed APK is published into GitHub Releases
+
+See [`docs/15-signing-and-release-channel.md`](./docs/15-signing-and-release-channel.md).
 
 ## GitHub Secrets
-Optional for signed release APKs:
+Required for official/public release APKs:
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Without these, CI still publishes a debug APK so install/testing is not blocked.
+Without these, do not cut a public tag intended for browser install or in-app self-update.
 
 ## Recommended GitHub release naming
 - repo tag: `v0.1.0`
-- release asset (signed): `android-companion-v0.1.0.apk`
-- release asset (fallback debug): `android-companion-v0.1.0-debug.apk`
+- official release asset (signed): `android-companion-v0.1.0.apk`
+- debug artifacts: workflow artifacts / local testing only
 
 ## Testing checklist
 - [ ] app opens on device
@@ -360,7 +362,7 @@ Without these, CI still publishes a debug APK so install/testing is not blocked.
 - No background transport yet (no FCM/WebSocket command ingress)
 - No authenticated remote command channel yet
 - Self-update uses GitHub Releases and sideload flow, not Play updates
-- Release signing depends on secrets being configured in GitHub
+- Public releases depend on stable signing secrets/keystore continuity in GitHub
 - Capability handlers are partially extracted, but the app is still not fully modularized into separate Android modules yet
 
 ## v0.2 candidates
