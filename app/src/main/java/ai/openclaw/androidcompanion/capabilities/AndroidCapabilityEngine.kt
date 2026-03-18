@@ -207,6 +207,8 @@ class AndroidCapabilityEngine(
             val forceUpdate = manifestResult.optBoolean("force_update", false)
             val updateAvailable = latestVersionName.isNotBlank() && latestVersionName != currentVersionName
             val supported = minSupportedVersionCode <= 0L || currentVersionCode >= minSupportedVersionCode
+            val apkUrl = manifestResult.optString("apk_url")
+            val apkReachable = if (apkUrl.isNotBlank()) isUrlReachable(apkUrl) else false
             return okAction(command)
                 .put("current_version", currentVersionName)
                 .put("current_version_code", currentVersionCode)
@@ -216,7 +218,8 @@ class AndroidCapabilityEngine(
                 .put("force_update", forceUpdate)
                 .put("supported", supported)
                 .put("update_available", updateAvailable)
-                .put("apk_url", manifestResult.optString("apk_url"))
+                .put("apk_url", apkUrl)
+                .put("apk_reachable", apkReachable)
                 .put("release_url", manifestResult.optString("release_url"))
                 .put("manifest_url", manifestUrl)
                 .put("notes", manifestResult.optString("notes"))
@@ -245,6 +248,7 @@ class AndroidCapabilityEngine(
             .put("latest_version", latestTag)
             .put("update_available", latestTag.isNotBlank() && latestTag != currentVersionName)
             .put("apk_url", apkUrl)
+            .put("apk_reachable", apkUrl?.let { isUrlReachable(it) } ?: false)
             .put("release_url", response.optString("html_url"))
             .put("release_api_url", resolvedReleaseApiUrl)
             .put("force_update", false)
@@ -267,6 +271,19 @@ class AndroidCapabilityEngine(
             .put("apk_url", apkUrl)
             .put("downloaded_to", outputFile.absolutePath)
             .put("install_prompt", true)
+    }
+
+    private fun isUrlReachable(url: String): Boolean {
+        return runCatching {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.instanceFollowRedirects = true
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.connect()
+            val code = connection.responseCode
+            code in 200..399
+        }.getOrDefault(false)
     }
 
     private fun fetchJson(url: String): JSONObject {

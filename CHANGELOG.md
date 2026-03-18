@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.0-alpha4
+- fixed GitHub release workflow so uploaded release assets use the same versioned filename referenced by the update manifest
+- updated update manifest for alpha4 with a correct versioned APK URL
+- added APK reachability checks in self-update status for easier diagnosis of broken update links
+- bumped app version to 0.2.0-alpha4
+
 ## v0.2.0-alpha3
 - added Korean/English bilingual strings with in-app language selection
 - added clearer section descriptions and more explicit button labels
