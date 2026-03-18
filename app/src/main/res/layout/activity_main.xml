@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -13,31 +12,70 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Android Companion MVP v0.1"
+            android:text="Android Companion v0.2-alpha"
             android:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Thin runtime / JSON action executor"
+            android:text="Thin runtime / JSON executor / remote polling alpha"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Remote transport"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="JSON command">
+            android:layout_marginTop="8dp"
+            android:hint="Remote base URL (e.g. http://192.168.0.10:8787)">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/commandInput"
+                android:id="@+id/remoteBaseUrlInput"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:gravity="top|start"
-                android:inputType="textMultiLine"
-                android:text='{
-  "action": "health_ping"
-}' />
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Device ID">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/remoteDeviceIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Bearer token (optional alpha secret)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/remoteTokenInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Poll interval seconds">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/remotePollSecondsInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
@@ -47,12 +85,91 @@
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/executeButton"
+                android:id="@+id/saveRemoteConfigButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Execute" />
+                android:text="Save" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/registerRemoteButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Register" />
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/startRemoteButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Start remote" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/stopRemoteButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Stop remote" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/remoteStatusOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/result_background"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:text="Remote status idle"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Manual command runner"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="JSON command">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/commandInput"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:text='{
+  "action": "health_ping",
+  "params": {}
+}' />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/executeButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Execute" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -68,9 +185,7 @@
                 android:layout_weight="1"
                 android:text="Ping" />
 
-            <Space
-                android:layout_width="8dp"
-                android:layout_height="1dp" />
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/sampleListAppsButton"
@@ -80,9 +195,7 @@
                 android:layout_weight="1"
                 android:text="Apps" />
 
-            <Space
-                android:layout_width="8dp"
-                android:layout_height="1dp" />
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/sampleUpdateButton"

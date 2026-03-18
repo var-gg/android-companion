@@ -1,4 +1,4 @@
-# Android Companion MVP (v0.1)
+# Android Companion (v0.2.0-alpha1)
 
 Thin Android runtime / executor for a personal agent system.
 
@@ -9,7 +9,7 @@ This app is intentionally **not** a fat automation brain. It is a small Android-
 - leaves orchestration and decision logic to desktop/server agents.
 
 ## MVP scope
-Implemented in v0.1:
+Implemented in v0.2.0-alpha1:
 1. `health_ping`
 2. `device_info`
 3. `open_url`
@@ -22,6 +22,9 @@ Implemented in v0.1:
 10. `download_self_update` (downloads APK and opens install prompt)
 11. JSON-first success/error output
 12. In-app recent command log panel for manual testing
+13. Remote transport config UI
+14. Polling-based remote command fetch / result upload alpha
+15. Foreground remote polling service
 
 ## Product principles
 - Thin runtime on device
@@ -205,6 +208,39 @@ Legacy flat v0.1 shape is still accepted for backward compatibility.
   },
   "timestamp": "2026-03-17T09:00:00Z"
 }
+```
+
+## Remote control alpha
+The app now includes a polling-based remote transport alpha:
+- configure base URL / device ID / bearer token / poll interval in the app
+- register the device to a bridge endpoint
+- start the foreground polling service
+- app fetches remote commands, executes them, and uploads results
+
+Reference:
+- [`docs/13-remote-transport-alpha.md`](./docs/13-remote-transport-alpha.md)
+- [`scripts/mock-remote-bridge.mjs`](./scripts/mock-remote-bridge.mjs)
+
+### Quick local bridge test
+```powershell
+$env:ANDROID_COMPANION_TOKEN = "dev-secret"
+node .\scripts\mock-remote-bridge.mjs
+```
+
+Then enqueue a command from desktop:
+```powershell
+$headers = @{ Authorization = "Bearer dev-secret" }
+$body = @{
+  device_id = "<your-device-id>"
+  action = "list_installed_apps"
+  params = @{ include_system = $false }
+} | ConvertTo-Json -Depth 6
+Invoke-RestMethod -Method Post -Uri "http://<desktop-ip>:8787/api/v1/commands/enqueue" -Headers $headers -ContentType "application/json" -Body $body
+```
+
+Inspect uploaded results:
+```powershell
+Invoke-RestMethod -Uri "http://<desktop-ip>:8787/api/v1/results" -Headers $headers
 ```
 
 ## GitHub Actions release flow

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0-alpha1
+- added polling-based remote transport alpha
+- added remote config UI for base URL, device ID, bearer token, and poll interval
+- added foreground remote polling service with heartbeat, command fetch, execution, and result upload
+- introduced reusable Android capability engine for both manual and remote execution paths
+- added mock desktop bridge server script for local remote-control testing
+- bumped app version to 0.2.0-alpha1
+
 ## v0.1.1
 - standardized preferred command envelope to `{ action, params, request_id? }`
 - kept backward compatibility for flat v0.1 command shape

@@ -23,6 +23,7 @@ It should remain understandable as a device capability surface, not drift into a
 7. [10-v0.1-prd.md](./10-v0.1-prd.md)
 8. [11-implementation-roadmap.md](./11-implementation-roadmap.md)
 9. [12-backlog.md](./12-backlog.md)
+10. [13-remote-transport-alpha.md](./13-remote-transport-alpha.md)
 
 ## Reading layers
 
@@ -39,6 +40,7 @@ Read:
 2. [06-capability-contract.md](./06-capability-contract.md)
 3. [08-update-and-release-model.md](./08-update-and-release-model.md)
 4. [09-module-boundaries.md](./09-module-boundaries.md)
+5. [13-remote-transport-alpha.md](./13-remote-transport-alpha.md)
 
 ### If you want trust, permissions, and risk
 Read:
@@ -73,6 +75,7 @@ Read:
 - [10-v0.1-prd.md](./10-v0.1-prd.md) — MVP product requirements
 - [11-implementation-roadmap.md](./11-implementation-roadmap.md) — phased build path
 - [12-backlog.md](./12-backlog.md) — near-term open work
+- [13-remote-transport-alpha.md](./13-remote-transport-alpha.md) — polling-based remote control alpha contract
 
 ## Reading philosophy
 If you only read one product document, read [00-overview.md](./00-overview.md).
