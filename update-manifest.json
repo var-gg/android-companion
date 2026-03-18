@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha2",
-  "version_name": "0.2.0-alpha2",
-  "version_code": 3,
-  "min_supported_version_code": 3,
+  "tag_name": "v0.2.0-alpha3",
+  "version_name": "0.2.0-alpha3",
+  "version_code": 4,
+  "min_supported_version_code": 4,
   "force_update": true,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha2/app-debug.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha2",
-  "notes": "Adds in-app update controls, version display, and soft-force update policy."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha3/android-companion-v0.2.0-alpha3-debug.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha3",
+  "notes": "Adds bilingual UI, clearer section guidance, and a permission/device setup panel for fast capability enablement."
 }

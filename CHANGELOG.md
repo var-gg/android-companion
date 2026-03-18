@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0-alpha3
+- added Korean/English bilingual strings with in-app language selection
+- added clearer section descriptions and more explicit button labels
+- added permissions/device-setup panel for usage access, unknown app installs, notifications, and battery optimization exemption
+- added POST_NOTIFICATIONS and battery optimization request support
+- bumped app version to 0.2.0-alpha3
+
 ## v0.2.0-alpha2
 - added in-app current version display
 - added Check update / Update now controls

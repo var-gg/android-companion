@@ -1,11 +1,17 @@
 package ai.openclaw.androidcompanion
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.databinding.ActivityMainBinding
 import ai.openclaw.androidcompanion.logging.CommandLogStore
+import ai.openclaw.androidcompanion.settings.LanguageSettings
+import ai.openclaw.androidcompanion.settings.PermissionStatus
 import ai.openclaw.androidcompanion.transport.RemotePollingService
 import ai.openclaw.androidcompanion.transport.TransportConfig
 import ai.openclaw.androidcompanion.transport.TransportConfigStore
@@ -22,8 +28,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var commandLogStore: CommandLogStore
     private lateinit var transportConfigStore: TransportConfigStore
     private var lastUpdatePolicy: UpdatePolicy? = null
+    private var suppressLanguageChange = false
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        renderPermissionStatus()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        LanguageSettings.applySaved(this)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -31,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         engine = AndroidCapabilityEngine(this)
         commandLogStore = CommandLogStore(this)
         transportConfigStore = TransportConfigStore(this)
+
+        setupLanguageControls()
+        setupPermissionControls()
 
         binding.executeButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
@@ -44,17 +61,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.saveRemoteConfigButton.setOnClickListener {
             saveRemoteConfig()
-            renderStatus("Remote config saved")
+            renderStatus(getString(R.string.status_remote_config_saved))
         }
         binding.startRemoteButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
             saveRemoteConfig()
             RemotePollingService.start(this)
-            renderStatus("Remote polling service started")
+            renderStatus(getString(R.string.status_remote_started))
         }
         binding.stopRemoteButton.setOnClickListener {
             RemotePollingService.stop(this)
-            renderStatus("Remote polling service stopped")
+            renderStatus(getString(R.string.status_remote_stopped))
         }
         binding.registerRemoteButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
@@ -64,8 +81,71 @@ class MainActivity : AppCompatActivity() {
 
         loadRemoteConfig()
         renderVersionInfo()
+        renderPermissionStatus()
         renderRecentCommands()
         checkUpdateNow(silent = true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        renderPermissionStatus()
+    }
+
+    private fun setupLanguageControls() {
+        suppressLanguageChange = true
+        when (LanguageSettings.getSavedLanguage(this)) {
+            LanguageSettings.LANGUAGE_KO -> binding.languageKoRadio.isChecked = true
+            LanguageSettings.LANGUAGE_EN -> binding.languageEnRadio.isChecked = true
+            else -> binding.languageSystemRadio.isChecked = true
+        }
+        suppressLanguageChange = false
+
+        binding.languageRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            if (suppressLanguageChange) return@setOnCheckedChangeListener
+            val language = when (checkedId) {
+                R.id.languageKoRadio -> LanguageSettings.LANGUAGE_KO
+                R.id.languageEnRadio -> LanguageSettings.LANGUAGE_EN
+                else -> LanguageSettings.LANGUAGE_SYSTEM
+            }
+            if (language != LanguageSettings.getSavedLanguage(this)) {
+                LanguageSettings.setLanguage(this, language)
+                recreate()
+            }
+        }
+    }
+
+    private fun setupPermissionControls() {
+        binding.grantUsageAccessButton.setOnClickListener {
+            PermissionStatus.openUsageAccessSettings(this)
+        }
+        binding.allowInstallsButton.setOnClickListener {
+            PermissionStatus.openUnknownAppSourcesSettings(this)
+        }
+        binding.allowNotificationsButton.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                PermissionStatus.openNotificationSettings(this)
+            }
+        }
+        binding.batteryOptimizationButton.setOnClickListener {
+            PermissionStatus.openBatteryOptimizationSettings(this)
+        }
+    }
+
+    private fun renderPermissionStatus() {
+        val snapshot = PermissionStatus.snapshot(this)
+        val enabled = getString(R.string.permission_enabled)
+        val disabled = getString(R.string.permission_disabled)
+        val lines = listOf(
+            getString(R.string.permission_status_format, getString(R.string.usage_access_label), if (snapshot.usageAccess) enabled else disabled),
+            getString(R.string.permission_status_format, getString(R.string.install_unknown_apps_label), if (snapshot.installUnknownApps) enabled else disabled),
+            getString(R.string.permission_status_format, getString(R.string.notifications_label), if (snapshot.notificationPermission) enabled else disabled),
+            getString(R.string.permission_status_format, getString(R.string.battery_optimization_label), if (snapshot.ignoringBatteryOptimizations) enabled else disabled)
+        )
+        binding.permissionStatusOutput.text = lines.joinToString("\n")
     }
 
     private fun executeCommand(raw: String) {
@@ -106,7 +186,7 @@ class MainActivity : AppCompatActivity() {
     private fun registerDeviceNow() {
         val config = currentTransportConfig()
         if (config.baseUrl.isBlank()) {
-            renderStatus("Base URL required before registration")
+            renderStatus(getString(R.string.status_base_url_required))
             return
         }
         thread {
@@ -139,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         val policy = lastUpdatePolicy
         val apkUrl = policy?.apkUrl
         if (apkUrl.isNullOrBlank()) {
-            renderStatus("No APK URL available yet. Run check update first.")
+            renderStatus(getString(R.string.status_no_apk_url))
             return
         }
         thread {
@@ -152,7 +232,7 @@ class MainActivity : AppCompatActivity() {
             )
             runOnUiThread {
                 renderResult(result)
-                renderStatus("Update package downloaded; Android install prompt should appear.")
+                renderStatus(getString(R.string.status_update_prompt_expected))
             }
         }
     }
@@ -161,7 +241,7 @@ class MainActivity : AppCompatActivity() {
         val policy = lastUpdatePolicy ?: return false
         val blocked = !policy.supported || (policy.forceUpdate && policy.updateAvailable)
         if (blocked) {
-            renderStatus("Update required before continuing. Use Check update / Update now.")
+            renderStatus(getString(R.string.status_update_required))
             renderUpdateState(policy)
         }
         return blocked
@@ -190,24 +270,32 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderVersionInfo() {
         val app = engine.appIdentity()
-        binding.versionOutput.text = "Current version: ${app.optString("version_name")} (${app.optLong("version_code")})"
+        binding.versionOutput.text = getString(
+            R.string.current_version_format,
+            app.optString("version_name"),
+            app.optLong("version_code")
+        )
     }
 
     private fun renderUpdateState(policy: UpdatePolicy?) {
         if (policy == null) {
-            binding.updateStatusOutput.text = "Update status unknown"
+            binding.updateStatusOutput.text = getString(R.string.update_status_unknown)
             binding.updateNowButton.isEnabled = false
             return
         }
         val lines = mutableListOf<String>()
-        lines += "Current: ${policy.currentVersionName} (${policy.currentVersionCode})"
-        lines += "Latest: ${policy.latestVersionName}${policy.latestVersionCode?.let { " ($it)" } ?: ""}"
-        lines += "Update available: ${policy.updateAvailable}"
-        lines += "Supported: ${policy.supported}"
-        lines += "Force update: ${policy.forceUpdate}"
-        policy.minSupportedVersionCode?.let { lines += "Min supported versionCode: $it" }
-        policy.apkUrl?.let { lines += "APK: $it" }
-        policy.notes?.let { lines += "Notes: $it" }
+        lines += getString(R.string.update_current, policy.currentVersionName, policy.currentVersionCode)
+        lines += getString(
+            R.string.update_latest,
+            policy.latestVersionName,
+            policy.latestVersionCode?.let { " ($it)" } ?: ""
+        )
+        lines += getString(R.string.update_available, policy.updateAvailable.toString())
+        lines += getString(R.string.update_supported, policy.supported.toString())
+        lines += getString(R.string.update_force, policy.forceUpdate.toString())
+        policy.minSupportedVersionCode?.let { lines += getString(R.string.update_min_supported, it) }
+        policy.apkUrl?.let { lines += getString(R.string.update_apk, it) }
+        policy.notes?.let { lines += getString(R.string.update_notes, it) }
         binding.updateStatusOutput.text = lines.joinToString("\n")
         binding.updateNowButton.isEnabled = !policy.apkUrl.isNullOrBlank() && policy.updateAvailable
 
@@ -217,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         binding.registerRemoteButton.isEnabled = !blocked
         binding.commandInput.isEnabled = !blocked
         if (blocked) {
-            binding.remoteStatusOutput.text = "Soft-force update active: update required before command execution."
+            binding.remoteStatusOutput.text = getString(R.string.status_soft_force_active)
         }
     }
 

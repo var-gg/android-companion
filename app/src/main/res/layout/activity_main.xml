@@ -12,14 +12,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Android Companion v0.2-alpha"
+            android:text="@string/home_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Thin runtime / JSON executor / remote polling alpha"
+            android:text="@string/home_subtitle"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
@@ -30,7 +30,6 @@
             android:background="@drawable/result_background"
             android:fontFamily="monospace"
             android:padding="12dp"
-            android:text="Current version: loading"
             android:textIsSelectable="true"
             android:textSize="12sp" />
 
@@ -38,8 +37,132 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Update control"
+            android:text="@string/permissions_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/permissions_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+        <TextView
+            android:id="@+id/permissionStatusOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/result_background"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/grantUsageAccessButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/grant_usage_access" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/allowInstallsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/allow_app_installs" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/allowNotificationsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/allow_notifications" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/batteryOptimizationButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/battery_optimization" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/language_section_title"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/language_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+        <RadioGroup
+            android:id="@+id/languageRadioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/languageSystemRadio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/language_system" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/languageKoRadio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/language_korean" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/languageEnRadio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/language_english" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/update_section_title"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/update_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -53,7 +176,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Check update" />
+                android:text="@string/check_update" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -62,7 +185,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Update now" />
+                android:text="@string/update_now" />
         </LinearLayout>
 
         <TextView
@@ -73,7 +196,7 @@
             android:background="@drawable/result_background"
             android:fontFamily="monospace"
             android:padding="12dp"
-            android:text="Update status unknown"
+            android:text="@string/update_status_unknown"
             android:textIsSelectable="true"
             android:textSize="12sp" />
 
@@ -81,14 +204,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Remote transport"
+            android:text="@string/remote_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/remote_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Remote base URL (e.g. http://192.168.0.10:8787)">
+            android:hint="@string/hint_remote_base_url">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/remoteBaseUrlInput"
@@ -100,7 +230,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Device ID">
+            android:hint="@string/hint_device_id">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/remoteDeviceIdInput"
@@ -112,7 +242,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Bearer token (optional alpha secret)">
+            android:hint="@string/hint_token">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/remoteTokenInput"
@@ -124,7 +254,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Poll interval seconds">
+            android:hint="@string/hint_poll_interval">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/remotePollSecondsInput"
@@ -145,7 +275,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Save" />
+                android:text="@string/save" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -155,7 +285,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Register" />
+                android:text="@string/register_device" />
         </LinearLayout>
 
         <LinearLayout
@@ -169,7 +299,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Start remote" />
+                android:text="@string/start_remote" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -179,7 +309,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Stop remote" />
+                android:text="@string/stop_remote" />
         </LinearLayout>
 
         <TextView
@@ -190,7 +320,7 @@
             android:background="@drawable/result_background"
             android:fontFamily="monospace"
             android:padding="12dp"
-            android:text="Remote status idle"
+            android:text="@string/remote_status_idle"
             android:textIsSelectable="true"
             android:textSize="12sp" />
 
@@ -198,14 +328,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Manual command runner"
+            android:text="@string/manual_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/manual_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="JSON command">
+            android:hint="@string/hint_json_command">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/commandInput"
@@ -224,7 +361,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Execute" />
+            android:text="@string/execute_command" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -238,7 +375,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ping" />
+                android:text="@string/sample_ping" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -248,7 +385,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Apps" />
+                android:text="@string/sample_apps" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -258,15 +395,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Update" />
+                android:text="@string/sample_update" />
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Result"
+            android:text="@string/result_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/result_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
             android:id="@+id/resultOutput"
@@ -283,8 +427,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Recent command logs"
+            android:text="@string/logs_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/logs_section_desc"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
             android:id="@+id/recentLogsOutput"
