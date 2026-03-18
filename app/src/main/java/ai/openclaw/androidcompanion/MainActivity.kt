@@ -9,6 +9,9 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.zxing.client.android.Intents
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.databinding.ActivityMainBinding
@@ -40,6 +43,16 @@ class MainActivity : AppCompatActivity() {
         renderPermissionStatus()
     }
 
+    private val qrScanLauncher = registerForActivityResult(ScanContract()) { result ->
+        val raw = result.contents?.trim().orEmpty()
+        if (raw.isBlank()) {
+            renderStatus(getString(R.string.status_qr_scan_cancelled))
+            return@registerForActivityResult
+        }
+        binding.pairingCodeInput.setText(raw)
+        importPairingPayload(raw)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageSettings.applySaved(this)
         super.onCreate(savedInstanceState)
@@ -65,6 +78,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.installTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = true) }
         binding.openTailscaleButton.setOnClickListener { installOrOpenTailscale(forceStore = false) }
+        binding.scanPairingQrButton.setOnClickListener { launchPairingQrScanner() }
         binding.importPairingCodeButton.setOnClickListener { importPairingFromField() }
         binding.testRemoteConnectionButton.setOnClickListener {
             saveRemoteConfig()
@@ -186,6 +200,16 @@ class MainActivity : AppCompatActivity() {
         } catch (_: ActivityNotFoundException) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TAILSCALE_PLAY_STORE_WEB_URL)))
         }
+    }
+
+    private fun launchPairingQrScanner() {
+        val options = ScanOptions()
+            .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            .setPrompt(getString(R.string.qr_scan_prompt))
+            .setBeepEnabled(false)
+            .setOrientationLocked(false)
+            .addExtra(Intents.Scan.SCAN_TYPE, Intents.Scan.MIXED_SCAN)
+        qrScanLauncher.launch(options)
     }
 
     private fun importPairingFromField() {

@@ -33,7 +33,9 @@
     <string name="tailscale_status_installed">Tailscale detected on this phone</string>
     <string name="tailscale_status_missing">Tailscale not detected on this phone</string>
     <string name="hint_pairing_code">Pairing code or acpair link</string>
+    <string name="scan_pairing_qr">Scan pairing QR</string>
     <string name="import_pairing_code">Import pairing code</string>
+    <string name="qr_scan_prompt">Scan the Android Companion pairing QR</string>
     <string name="remote_section_title">Remote transport</string>
     <string name="remote_section_desc">After pairing import, review the fields below. Save stores settings, Register announces this device immediately, Start remote begins background polling, and Stop remote halts it.</string>
     <string name="hint_remote_base_url">Remote base URL (imported from pairing or pasted manually)</string>
@@ -62,6 +64,7 @@
     <string name="status_remote_stopped">Remote polling service stopped</string>
     <string name="status_base_url_required">Base URL required before registration</string>
     <string name="status_pairing_code_required">Paste a pairing code first</string>
+    <string name="status_qr_scan_cancelled">QR scan cancelled</string>
     <string name="status_pairing_import_failed">Pairing import failed: %1$s</string>
     <string name="status_pairing_expired">This pairing code has expired</string>
     <string name="status_pairing_imported">Pairing imported for %1$s (%2$s)</string>

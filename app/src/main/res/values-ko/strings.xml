@@ -33,7 +33,9 @@
     <string name="tailscale_status_installed">이 휴대폰에서 Tailscale이 감지되었습니다</string>
     <string name="tailscale_status_missing">이 휴대폰에서 Tailscale이 감지되지 않았습니다</string>
     <string name="hint_pairing_code">페어링 코드 또는 acpair 링크</string>
+    <string name="scan_pairing_qr">페어링 QR 스캔</string>
     <string name="import_pairing_code">페어링 코드 가져오기</string>
+    <string name="qr_scan_prompt">안드로이드 컴패니언 페어링 QR을 스캔하세요</string>
     <string name="remote_section_title">원격 연결</string>
     <string name="remote_section_desc">페어링 가져오기 후 아래 필드를 검토하세요. 저장은 설정 저장, 기기 등록은 즉시 기기 알림, 원격 시작은 백그라운드 폴링 시작, 원격 중지는 폴링 중지입니다.</string>
     <string name="hint_remote_base_url">원격 Base URL (페어링에서 가져오거나 수동 붙여넣기)</string>
@@ -62,6 +64,7 @@
     <string name="status_remote_stopped">원격 폴링 서비스를 중지했습니다</string>
     <string name="status_base_url_required">기기 등록 전에 Base URL이 필요합니다</string>
     <string name="status_pairing_code_required">먼저 페어링 코드를 붙여넣으세요</string>
+    <string name="status_qr_scan_cancelled">QR 스캔이 취소되었습니다</string>
     <string name="status_pairing_import_failed">페어링 가져오기에 실패했습니다: %1$s</string>
     <string name="status_pairing_expired">이 페어링 코드는 만료되었습니다</string>
     <string name="status_pairing_imported">%1$s (%2$s)용 페어링을 가져왔습니다</string>
