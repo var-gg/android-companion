@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha5",
-  "version_name": "0.2.0-alpha5",
-  "version_code": 6,
-  "min_supported_version_code": 5,
+  "tag_name": "v0.2.0-alpha6",
+  "version_name": "0.2.0-alpha6",
+  "version_code": 7,
+  "min_supported_version_code": 6,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha5/android-companion-v0.2.0-alpha5-debug.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha5",
-  "notes": "Makes LAN remote setup base-url first, treats bearer token as optional for local dev, auto-registers on remote start, and fixes update gating so remote controls are not disabled unnecessarily."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha6/android-companion-v0.2.0-alpha6-debug.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha6",
+  "notes": "Adds Tailscale-first pairing import, in-app QR scanning, remote connection testing, and pairing payload hardening for the Android Companion remote bootstrap flow."
 }

@@ -1,4 +1,4 @@
-# Android Companion (v0.2.0-alpha5)
+# Android Companion (v0.2.0-alpha6)
 
 Thin Android runtime / executor for a personal agent system.
 
@@ -41,6 +41,7 @@ Implemented in v0.2.0-alpha2:
 - `docs/` product / architecture / trust-boundary / roadmap docs
 - `.github/workflows/android-release.yml` CI/CD for APK build + release asset publishing
 - `scripts/release.ps1` helper for tag-based release flow
+- `scripts/generate-update-manifest.mjs` helper for release manifest generation
 
 Start with [`docs/README.md`](./docs/README.md) for the doc-first reading path.
 
@@ -65,6 +66,10 @@ copy local.properties.example local.properties
 ```powershell
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
+
+### Preferred public install path
+Use the GitHub Release APK for normal user installation.
+ADB is developer tooling, not the primary install path.
 
 ## Permission notes
 ### `QUERY_ALL_PACKAGES`

@@ -1,7 +1,8 @@
 # Update and Release Model
 
 ## Release source of truth
-GitHub Releases are the initial source of truth for public APK distribution.
+GitHub Releases are the source of truth for public APK distribution.
+The public install path should assume GitHub Release first, then in-app self-update for later versions.
 
 ## Build path
 - push code to GitHub

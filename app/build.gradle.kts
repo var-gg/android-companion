@@ -17,8 +17,8 @@ android {
         applicationId = "ai.openclaw.androidcompanion"
         minSdk = 28
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.2.0-alpha5"
+        versionCode = 7
+        versionName = "0.2.0-alpha6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
