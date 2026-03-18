@@ -27,7 +27,7 @@ class TransportConfigStore(context: Context) {
             baseUrl = prefs.getString(KEY_BASE_URL, "")?.trim().orEmpty(),
             deviceId = deviceId,
             token = prefs.getString(KEY_TOKEN, "")?.trim().orEmpty(),
-            pollIntervalSeconds = prefs.getLong(KEY_POLL_INTERVAL_SECONDS, 30L)
+            pollIntervalSeconds = prefs.getLong(KEY_POLL_INTERVAL_SECONDS, 10L)
         )
     }
 

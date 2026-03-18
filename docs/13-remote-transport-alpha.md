@@ -87,8 +87,14 @@ Response with no work:
 `POST /api/v1/heartbeat`
 
 ## Current trust model
-Optional alpha bearer token.
-This is not yet strong enough for hostile-network production use.
+Bearer token is optional in local/LAN alpha mode.
+For a same-network personal setup, the easiest path is:
+- paste the desktop bridge URL into the app
+- keep the auto-generated device ID
+- leave token blank
+- start remote polling
+
+This is convenient for development and first-user testing, but it is not strong enough for hostile-network production use.
 Future versions should add:
 - per-device registration secret
 - signed requests

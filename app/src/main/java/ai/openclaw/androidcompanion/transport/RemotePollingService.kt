@@ -49,6 +49,7 @@ class RemotePollingService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification("Remote polling active"))
 
         thread(name = "remote-polling-loop") {
+            var registeredThisRun = false
             while (running) {
                 val config = configStore.load()
                 if (config.baseUrl.isBlank()) {
@@ -58,6 +59,11 @@ class RemotePollingService : Service() {
                 }
                 try {
                     val client = RemoteTransportClient(config)
+                    if (!registeredThisRun) {
+                        client.registerDevice(engine.execute(ai.openclaw.androidcompanion.contract.CommandEnvelope("device_info", JSONObject(), null)))
+                        registeredThisRun = true
+                        updateNotification("Registered ${config.deviceId}")
+                    }
                     client.postHeartbeat(
                         JSONObject()
                             .put("timestamp", Instant.now().toString())

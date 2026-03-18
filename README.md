@@ -1,4 +1,4 @@
-# Android Companion (v0.2.0-alpha4)
+# Android Companion (v0.2.0-alpha5)
 
 Thin Android runtime / executor for a personal agent system.
 
@@ -263,8 +263,8 @@ Required inputs for the app:
 ### What an agent should provide to the user
 When assisting with setup, the agent should explicitly provide:
 - the exact `Remote Base URL` to paste into the app
-- the exact `Device ID` to use, or tell the user to keep the auto-generated value
-- the exact `Bearer Token` to paste, if auth is enabled
+- whether the user should keep the auto-generated `Device ID` (default: yes)
+- the exact `Bearer Token` to paste only if auth is enabled; otherwise explicitly say to leave it blank
 - the recommended `Poll interval seconds`
 - whether the bridge is LAN-only, reverse-proxied, or public
 - whether additional Android permissions/settings should be enabled for stable polling
@@ -279,16 +279,16 @@ When assisting with setup, the agent should explicitly provide:
 7. Validate that the bridge sees the device and that commands round-trip successfully.
 
 ### Quick local bridge test
-Start a local mock bridge on the desktop:
+Start a local mock bridge on the desktop.
+For the easiest local/LAN test, do **not** set a token at all:
 ```powershell
-$env:ANDROID_COMPANION_TOKEN = "dev-secret"
 node .\scripts\mock-remote-bridge.mjs
 ```
 
 Then provide these values to the user:
 - `Remote Base URL`: `http://<desktop-ip>:8787`
-- `Device ID`: keep the app-generated value or choose a stable name like `android-main-phone`
-- `Bearer Token`: `dev-secret`
+- `Device ID`: keep the app-generated value
+- `Bearer Token`: leave blank for local/LAN dev mode
 - `Poll interval seconds`: `10`
 
 Then enqueue a command from desktop:

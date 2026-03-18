@@ -256,7 +256,7 @@ class MainActivity : AppCompatActivity() {
             baseUrl = binding.remoteBaseUrlInput.text?.toString().orEmpty(),
             deviceId = binding.remoteDeviceIdInput.text?.toString().orEmpty(),
             token = binding.remoteTokenInput.text?.toString().orEmpty(),
-            pollIntervalSeconds = binding.remotePollSecondsInput.text?.toString()?.toLongOrNull() ?: 30L
+            pollIntervalSeconds = binding.remotePollSecondsInput.text?.toString()?.toLongOrNull() ?: 10L
         )
     }
 
