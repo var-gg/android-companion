@@ -21,6 +21,7 @@ Implemented in v0.1:
 9. `check_self_update` (GitHub Releases latest endpoint)
 10. `download_self_update` (downloads APK and opens install prompt)
 11. JSON-first success/error output
+12. In-app recent command log panel for manual testing
 
 ## Product principles
 - Thin runtime on device
@@ -72,17 +73,33 @@ Android does not grant this like a normal runtime permission. The user must expl
 Needed for self-update install prompt when sideloading newer APKs.
 
 ## JSON command examples
+Preferred envelope in v0.1.1:
+
+```json
+{
+  "action": "open_url",
+  "request_id": "demo-001",
+  "params": {
+    "url": "https://docs.openclaw.ai"
+  }
+}
+```
+
+Legacy flat v0.1 shape is still accepted for backward compatibility.
+
 ### Health ping
 ```json
 {
-  "action": "health_ping"
+  "action": "health_ping",
+  "params": {}
 }
 ```
 
 ### Device info
 ```json
 {
-  "action": "device_info"
+  "action": "device_info",
+  "params": {}
 }
 ```
 
@@ -90,7 +107,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "open_url",
-  "url": "https://docs.openclaw.ai"
+  "params": {
+    "url": "https://docs.openclaw.ai"
+  }
 }
 ```
 
@@ -98,7 +117,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "launch_app",
-  "package": "com.android.settings"
+  "params": {
+    "package": "com.android.settings"
+  }
 }
 ```
 
@@ -106,7 +127,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "list_installed_apps",
-  "include_system": false
+  "params": {
+    "include_system": false
+  }
 }
 ```
 
@@ -114,7 +137,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "usage_stats",
-  "hours": 12
+  "params": {
+    "hours": 12
+  }
 }
 ```
 
@@ -122,7 +147,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "uninstall_app",
-  "package": "com.example.target"
+  "params": {
+    "package": "com.example.target"
+  }
 }
 ```
 
@@ -130,8 +157,10 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "open_intent",
-  "intent_action": "android.settings.APPLICATION_DETAILS_SETTINGS",
-  "data": "package:com.android.chrome"
+  "params": {
+    "action": "android.settings.APPLICATION_DETAILS_SETTINGS",
+    "uri": "package:com.android.chrome"
+  }
 }
 ```
 
@@ -139,7 +168,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "check_self_update",
-  "release_api_url": "https://api.github.com/repos/OWNER/REPO/releases/latest"
+  "params": {
+    "release_api_url": "https://api.github.com/repos/var-gg/android-companion/releases/latest"
+  }
 }
 ```
 
@@ -147,7 +178,9 @@ Needed for self-update install prompt when sideloading newer APKs.
 ```json
 {
   "action": "download_self_update",
-  "apk_url": "https://github.com/OWNER/REPO/releases/download/v0.1.0/android-companion-v0.1.0.apk"
+  "params": {
+    "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.1.0/app-debug.apk"
+  }
 }
 ```
 
@@ -215,12 +248,12 @@ Without these, CI still publishes a debug APK so install/testing is not blocked.
 - [ ] `check_self_update` detects latest GitHub Release
 - [ ] `download_self_update` downloads APK and opens install prompt
 
-## Known limitations in v0.1
+## Known limitations in v0.1.1
 - No background transport yet (no FCM/WebSocket command ingress)
 - No authenticated remote command channel yet
 - Self-update uses GitHub Releases and sideload flow, not Play updates
 - Release signing depends on secrets being configured in GitHub
-- Current command router is single-activity based and should be modularized in v0.2
+- Capability handlers are partially extracted, but the app is still not fully modularized into separate Android modules yet
 
 ## v0.2 candidates
 - extract capability handlers into modules/packages
