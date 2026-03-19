@@ -3,8 +3,15 @@ catalog_version: "0.1"
 app:
   id: "android:com.nhn.android.nmap"
   package_name: "com.nhn.android.nmap"
-  display_name: "NAVER Map"
-  developer_name: "NAVER Cloud / NAVER"
+  display_name:
+    ko: "네이버지도"
+    en: "NAVER Map"
+  developer_name:
+    ko: "네이버"
+    en: "NAVER"
+  aliases:
+    ko: ["네이버 지도", "네이버맵"]
+    en: ["Naver Map", "NAVER Maps"]
   platform: "android"
   regions: ["KR"]
   category_tags: ["maps", "navigation", "local-search"]

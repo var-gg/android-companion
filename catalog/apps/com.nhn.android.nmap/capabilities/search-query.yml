@@ -9,8 +9,12 @@ capability:
     status: "confirmed"
     hypotheses: []
 
-  title: "Search places in NAVER Map"
-  summary: "Open NAVER Map search results for a text query."
+  title:
+    ko: "장소 검색"
+    en: "Search places in NAVER Map"
+  summary:
+    ko: "텍스트 질의로 네이버지도 검색 결과를 연다."
+    en: "Open NAVER Map search results for a text query."
 
   preconditions:
     app_installed: true
@@ -34,6 +38,28 @@ capability:
 
   confidence: "medium"
 
+  parameters:
+    - name: "query"
+      type: "string"
+      required: true
+      localized_name:
+        ko: "검색어"
+        en: "query"
+      description:
+        ko: "네이버지도에서 검색할 문자열"
+        en: "Text query to search in NAVER Map"
+      example: "강남역"
+    - name: "appname"
+      type: "string"
+      required: true
+      localized_name:
+        ko: "호출 앱 식별자"
+        en: "caller app identifier"
+      description:
+        ko: "공식 문서에 포함된 호출 앱 식별 값"
+        en: "Caller app identifier shown in official documentation"
+      example: "com.example.myapp"
+
   surfaces:
     - id: "nmap-search-v1"
       type: "custom_scheme"
@@ -44,6 +70,25 @@ capability:
       routing:
         may_show_chooser: false
         notes: "Official doc also includes bus search as nmap://search/bus?query=..."
+
+  examples:
+    - title:
+        ko: "강남역 검색"
+        en: "Search Gangnam Station"
+      uri: "nmap://search?query=%EA%B0%95%EB%82%A8%EC%97%AD&appname=com.example.myapp"
+      intent_uri: "intent://search?query=%EA%B0%95%EB%82%A8%EC%97%AD&appname=com.example.myapp#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;end"
+      notes:
+        - "Best first smoke-test target because semantics are simple and low-risk."
+
+  readiness:
+    documentation: "documented_substantial"
+    human_test: "ready"
+    agent_use: "guarded"
+
+  open_questions:
+    - "Does an empty query open a blank search screen, recent searches, or fail silently?"
+    - "How stable is search landing behavior across app versions and logged-in states?"
+    - "Should search/bus be modeled separately once runtime behavior is tested?"
 
   verification:
     last_verified_at: null

@@ -21,6 +21,9 @@ It is a capability-oriented catalog that stores:
 - `signing_cert_sha256` is a stronger identity field when known
 - Capability semantics must remain conservative early on
 - `observed`, `resolves`, and `verified` must not be treated as the same thing
+- Prefer deep, end-to-end app profiles over shallow broad coverage across many apps
+- Records should distinguish documented facts, runtime-verified facts, and still-open questions
+- Human-readable fields should support at least Korean and English when practical, while technical keys stay language-neutral
 
 ## v0.1 goals
 

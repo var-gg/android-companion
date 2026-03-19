@@ -12,8 +12,39 @@
       "properties": {
         "id": { "type": "string" },
         "package_name": { "type": "string" },
-        "display_name": { "type": "string" },
-        "developer_name": { "type": ["string", "null"] },
+        "display_name": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "ko": { "type": "string" },
+                "en": { "type": "string" }
+              },
+              "additionalProperties": { "type": "string" }
+            }
+          ]
+        },
+        "developer_name": {
+          "oneOf": [
+            { "type": ["string", "null"] },
+            {
+              "type": "object",
+              "properties": {
+                "ko": { "type": "string" },
+                "en": { "type": "string" }
+              },
+              "additionalProperties": { "type": "string" }
+            }
+          ]
+        },
+        "aliases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
         "platform": { "type": "string", "const": "android" },
         "regions": {
           "type": "array",

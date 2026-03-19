@@ -9,8 +9,12 @@ capability:
     status: "confirmed"
     hypotheses: []
 
-  title: "Open public transit route"
-  summary: "Open NAVER Map public transit directions between two points."
+  title:
+    ko: "대중교통 경로 열기"
+    en: "Open public transit route"
+  summary:
+    ko: "두 지점 사이의 네이버지도 대중교통 길찾기 화면을 연다."
+    en: "Open NAVER Map public transit directions between two points."
 
   preconditions:
     app_installed: true
@@ -34,6 +38,78 @@ capability:
 
   confidence: "medium"
 
+  parameters:
+    - name: "slat"
+      type: "double"
+      required: true
+      localized_name:
+        ko: "출발지 위도"
+        en: "departure latitude"
+      description:
+        ko: "출발지 latitude"
+        en: "Departure latitude"
+      example: 37.570377
+    - name: "slng"
+      type: "double"
+      required: true
+      localized_name:
+        ko: "출발지 경도"
+        en: "departure longitude"
+      description:
+        ko: "출발지 longitude"
+        en: "Departure longitude"
+      example: 126.982204
+    - name: "sname"
+      type: "string"
+      required: true
+      localized_name:
+        ko: "출발지 이름"
+        en: "departure name"
+      description:
+        ko: "출발지 표시 이름"
+        en: "Display name for departure"
+      example: "종각역"
+    - name: "dlat"
+      type: "double"
+      required: true
+      localized_name:
+        ko: "도착지 위도"
+        en: "destination latitude"
+      description:
+        ko: "도착지 latitude"
+        en: "Destination latitude"
+      example: 37.497175
+    - name: "dlng"
+      type: "double"
+      required: true
+      localized_name:
+        ko: "도착지 경도"
+        en: "destination longitude"
+      description:
+        ko: "도착지 longitude"
+        en: "Destination longitude"
+      example: 127.027926
+    - name: "dname"
+      type: "string"
+      required: true
+      localized_name:
+        ko: "도착지 이름"
+        en: "destination name"
+      description:
+        ko: "도착지 표시 이름"
+        en: "Display name for destination"
+      example: "강남역"
+    - name: "appname"
+      type: "string"
+      required: true
+      localized_name:
+        ko: "호출 앱 식별자"
+        en: "caller app identifier"
+      description:
+        ko: "공식 문서에 포함된 호출 앱 식별 값"
+        en: "Caller app identifier shown in official documentation"
+      example: "com.example.myapp"
+
   surfaces:
     - id: "nmap-route-public-v1"
       type: "custom_scheme"
@@ -44,6 +120,26 @@ capability:
       routing:
         may_show_chooser: false
         notes: "Transit-specific route surface from official docs"
+
+  examples:
+    - title:
+        ko: "종각역에서 강남역 대중교통 길찾기"
+        en: "Transit route from Jonggak Station to Gangnam Station"
+      uri: "nmap://route/public?slat=37.570377&slng=126.982204&sname=%EC%A2%85%EA%B0%81%EC%97%AD&dlat=37.497175&dlng=127.027926&dname=%EA%B0%95%EB%82%A8%EC%97%AD&appname=com.example.myapp"
+      intent_uri: "intent://route/public?slat=37.570377&slng=126.982204&sname=%EC%A2%85%EA%B0%81%EC%97%AD&dlat=37.497175&dlng=127.027926&dname=%EA%B0%95%EB%82%A8%EC%97%AD&appname=com.example.myapp#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;end"
+      notes:
+        - "Representative happy-path example for Korean commuter routing."
+
+  readiness:
+    documentation: "documented_substantial"
+    human_test: "ready"
+    agent_use: "guarded"
+
+  open_questions:
+    - "Are all start-point fields truly mandatory, or can NAVER Map infer origin from current location when omitted?"
+    - "Does route/public always land on public transit, or can it switch to a broader route chooser depending on app version?"
+    - "How does the route behave when coordinates and names disagree?"
+    - "Is there separate subway-specific behavior worth modeling beyond generic public transit?"
 
   verification:
     last_verified_at: null
