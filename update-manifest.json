@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha14",
-  "version_name": "0.2.0-alpha14",
-  "version_code": 15,
-  "min_supported_version_code": 14,
+  "tag_name": "v0.2.0-alpha15",
+  "version_name": "0.2.0-alpha15",
+  "version_code": 16,
+  "min_supported_version_code": 15,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha14/android-companion-v0.2.0-alpha14.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha14",
-  "notes": "Adds selected-log row highlighting plus remote debug actions for status, command log retrieval, and execution trace inspection via the existing command transport."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha15/android-companion-v0.2.0-alpha15.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha15",
+  "notes": "Adds command-log persistence/query fixes plus a system readiness/settings surface so device setup blockers and remote-state diagnostics are easier to inspect before starting remote control."
 }

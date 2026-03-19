@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0-alpha15
+- fixed command log persistence and query behavior so recent remote execution history is retained more reliably
+- added a system readiness / settings surface for setup blockers and device-state checks
+- bumped app version to 0.2.0-alpha15
+
 ## v0.2.0-alpha11
 - redesigned the home screen around setup-critical actions instead of verbose diagnostics
 - promoted Permission Center and compacted pairing / remote connection controls
