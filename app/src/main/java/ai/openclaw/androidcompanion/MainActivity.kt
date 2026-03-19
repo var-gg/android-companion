@@ -3,6 +3,7 @@ package ai.openclaw.androidcompanion
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -49,7 +50,15 @@ class MainActivity : AppCompatActivity() {
     private var lastUpdatePolicy: UpdatePolicy? = null
     private var suppressLanguageChange = false
     private var advancedVisible = false
-    private var selectedLogIndex: Int? = null
+    private var selectedLogId: String? = null
+
+    private val logPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        runOnUiThread { renderRecentCommands() }
+    }
+
+    private val remoteStatePrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        runOnUiThread { renderConnectionStatus() }
+    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -121,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.clearLogsButton.setOnClickListener {
             commandLogStore.clear()
-            selectedLogIndex = null
+            selectedLogId = null
             renderRecentCommands()
             renderStatus(getString(R.string.status_logs_cleared))
         }
@@ -157,11 +166,28 @@ class MainActivity : AppCompatActivity() {
         checkUpdateNow(silent = true)
     }
 
+    override fun onStart() {
+        super.onStart()
+        getSharedPreferences("command_logs", MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(logPrefsListener)
+        getSharedPreferences("remote_ui_state", MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(remoteStatePrefsListener)
+    }
+
+    override fun onStop() {
+        getSharedPreferences("command_logs", MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(logPrefsListener)
+        getSharedPreferences("remote_ui_state", MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(remoteStatePrefsListener)
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         renderPermissionStatus()
         renderTailscaleStatus()
         renderConnectionStatus()
+        renderRecentCommands()
         handlePairingIntent(intent)
     }
 
@@ -286,7 +312,17 @@ class MainActivity : AppCompatActivity() {
             state.status == RemoteUiStateStore.STATUS_ERROR -> getString(R.string.connection_state_error) to state.detail.ifBlank { getString(R.string.connection_state_error_detail) }
             else -> getString(R.string.connection_state_disconnected) to getString(R.string.connection_state_disconnected_detail)
         }
-        binding.remoteStatusOutput.text = "$title\n$detail"
+        val lines = mutableListOf(title, detail)
+        state.lastPollAt.takeIf { it > 0L }?.let { lines += "last_poll: ${Instant.ofEpochMilli(it)}" }
+        state.lastResultUploadAt.takeIf { it > 0L }?.let { lines += "last_result_upload: ${Instant.ofEpochMilli(it)}" }
+        state.lastReceivedCommandAt.takeIf { it > 0L }?.let {
+            val suffix = buildString {
+                if (state.lastReceivedAction.isNotBlank()) append(" ${state.lastReceivedAction}")
+                if (state.lastReceivedCommandId.isNotBlank()) append(" (#${state.lastReceivedCommandId})")
+            }
+            lines += "last_received: ${Instant.ofEpochMilli(it)}$suffix"
+        }
+        binding.remoteStatusOutput.text = lines.joinToString("\n")
     }
 
     private fun installOrOpenTailscale(forceStore: Boolean) {
@@ -429,19 +465,22 @@ class MainActivity : AppCompatActivity() {
             if (envelope.action == "check_self_update" && result.optBoolean("ok", false)) {
                 lastUpdatePolicy = UpdatePolicyEvaluator.fromResult(result)
             }
-            commandLogStore.append(
+            val logEntry = commandLogStore.append(
                 JSONObject()
                     .put("timestamp", startedAt)
-                    .put("mode", "manual")
+                    .put("source", "manual_ui")
+                    .put("state", if (result.optBoolean("ok", false)) "finished" else "failed")
                     .put("action", envelope.action)
                     .put("request_id", envelope.requestId)
                     .put("ok", result.optBoolean("ok", false))
                     .put("command", JSONObject(json.toString()))
                     .put("result", JSONObject(result.toString()))
+                    .put("finished_at", Instant.now().toString())
             )
             runOnUiThread {
+                selectedLogId = logEntry.optString("log_id").takeIf { it.isNotBlank() }
                 renderResult(result)
-                renderRecentCommands(selectIndex = 0)
+                renderRecentCommands()
                 renderUpdateState(lastUpdatePolicy)
             }
         }
@@ -615,7 +654,7 @@ class MainActivity : AppCompatActivity() {
         binding.resultOutput.text = result.toString(2)
     }
 
-    private fun renderRecentCommands(selectIndex: Int? = selectedLogIndex) {
+    private fun renderRecentCommands() {
         val logs = commandLogStore.readAll()
         binding.recentLogsList.removeAllViews()
         if (logs.length() == 0) {
@@ -626,19 +665,22 @@ class MainActivity : AppCompatActivity() {
             binding.recentLogsList.addView(emptyView)
             binding.logDetailOutput.text = getString(R.string.log_detail_empty)
             binding.rerunLogButton.isEnabled = false
-            selectedLogIndex = null
+            selectedLogId = null
             return
         }
 
-        val resolvedIndex = selectIndex?.takeIf { it in 0 until logs.length() } ?: 0
-        selectedLogIndex = resolvedIndex
+        val resolvedIndex = findSelectedLogIndex(logs)
+        selectedLogId = logs.optJSONObject(resolvedIndex)?.optString("log_id")?.takeIf { it.isNotBlank() }
         for (i in 0 until logs.length()) {
             val entry = logs.optJSONObject(i) ?: continue
             val row = TextView(this).apply {
                 text = formatLogRow(entry, i == resolvedIndex)
                 setPadding(12, 12, 12, 12)
                 setBackgroundResource(R.drawable.result_background)
-                setOnClickListener { renderRecentCommands(selectIndex = i) }
+                setOnClickListener {
+                    selectedLogId = entry.optString("log_id").takeIf { it.isNotBlank() }
+                    renderRecentCommands()
+                }
             }
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -651,12 +693,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun formatLogRow(entry: JSONObject, selected: Boolean): String {
-        val marker = if (selected) "▶" else "•"
+        val marker = if (selected) ">" else "•"
         val timestamp = entry.optString("timestamp").takeLast(8)
         val action = entry.optString("action", "unknown")
-        val ok = if (entry.optBoolean("ok", false)) "ok" else "error"
+        val state = entry.optString("state").ifBlank { if (entry.optBoolean("ok", false)) "finished" else "failed" }
+        val source = entry.optString("source").ifBlank { entry.optString("mode") }
         val requestId = entry.optString("request_id").takeIf { it.isNotBlank() } ?: "-"
-        return "$marker $timestamp  $action  [$ok]  id=$requestId"
+        return "$marker $timestamp  $action  [$state/$source]  id=$requestId"
     }
 
     private fun renderLogDetail(entry: JSONObject?) {
@@ -667,10 +710,18 @@ class MainActivity : AppCompatActivity() {
         }
         val lines = mutableListOf<String>()
         lines += "timestamp: ${entry.optString("timestamp")}"
-        lines += "mode: ${entry.optString("mode")}"
+        lines += "source: ${entry.optString("source").ifBlank { entry.optString("mode") }}"
+        lines += "state: ${entry.optString("state")}"
         lines += "action: ${entry.optString("action")}"
         lines += "request_id: ${entry.optString("request_id")}"
-        lines += "ok: ${entry.optBoolean("ok", false)}"
+        if (entry.has("ok")) {
+            lines += "ok: ${entry.optBoolean("ok", false)}"
+        }
+        entry.optString("remote_command_id").takeIf { it.isNotBlank() }?.let { lines += "remote_command_id: $it" }
+        entry.optString("started_at").takeIf { it.isNotBlank() }?.let { lines += "started_at: $it" }
+        entry.optString("finished_at").takeIf { it.isNotBlank() }?.let { lines += "finished_at: $it" }
+        entry.optString("error").takeIf { it.isNotBlank() }?.let { lines += "error: $it" }
+        entry.optString("upload_error").takeIf { it.isNotBlank() }?.let { lines += "upload_error: $it" }
         entry.optJSONObject("command")?.let {
             lines += ""
             lines += "command:"
@@ -685,9 +736,28 @@ class MainActivity : AppCompatActivity() {
         binding.rerunLogButton.isEnabled = entry.optJSONObject("command") != null
     }
 
+
+    private fun findSelectedLogIndex(logs: org.json.JSONArray): Int {
+        val selectedId = selectedLogId
+        if (!selectedId.isNullOrBlank()) {
+            for (i in 0 until logs.length()) {
+                if (logs.optJSONObject(i)?.optString("log_id") == selectedId) return i
+            }
+        }
+        return 0
+    }
+
+    private fun findLogById(logs: org.json.JSONArray, logId: String): JSONObject? {
+        for (i in 0 until logs.length()) {
+            val entry = logs.optJSONObject(i) ?: continue
+            if (entry.optString("log_id") == logId) return entry
+        }
+        return null
+    }
+
     private fun rerunSelectedLog() {
-        val index = selectedLogIndex ?: return
-        val entry = commandLogStore.readAll().optJSONObject(index) ?: return
+        val selectedId = selectedLogId ?: return
+        val entry = findLogById(commandLogStore.readAll(), selectedId) ?: return
         val command = entry.optJSONObject("command")
         if (command == null) {
             renderStatus(getString(R.string.status_log_missing_command))
