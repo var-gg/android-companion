@@ -32,8 +32,8 @@ capability:
     agent_safe_to_attempt: true
 
   status:
-    evidence: "official_doc"
-    runtime: "untested"
+    evidence: "mixed"
+    runtime: "resolves_only"
     freshness: "fresh"
 
   confidence: "medium"
@@ -82,7 +82,7 @@ capability:
 
   readiness:
     documentation: "documented_substantial"
-    human_test: "ready"
+    human_test: "verified"
     agent_use: "guarded"
 
   open_questions:
@@ -91,8 +91,17 @@ capability:
     - "Should search/bus be modeled separately once runtime behavior is tested?"
 
   verification:
-    last_verified_at: null
-    samples: []
+    last_verified_at: "2026-03-19T16:53:40+09:00"
+    samples:
+      - app_version_name: "6.4.0.7"
+        app_version_code: 60400006
+        android_api_level: 34
+        android_release: "14"
+        device_model: "SM-S928N"
+        locale: "ko-KR"
+        login_state: null
+        region: "KR"
+        result: "Intent delivered and executed successfully via remote polling bridge; landing screen still requires visual confirmation"
 
   evidence:
     - id: "official-doc-url-scheme"
@@ -100,6 +109,11 @@ capability:
       path: "../evidence/2026-03-19-official-url-scheme.md"
       url: "https://guide.ncloud-docs.com/docs/en/maps-url-scheme"
       observed_at: "2026-03-19T16:20:00+09:00"
+    - id: "device-observed-remote-open-intent-search-20260319"
+      type: "device_observed"
+      path: "../evidence/2026-03-19-remote-intent-smoke-test.md"
+      url: null
+      observed_at: "2026-03-19T16:53:40+09:00"
 
   notes:
     - "Bus search may deserve a separate transit-specific capability later."
