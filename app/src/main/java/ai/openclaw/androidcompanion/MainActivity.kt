@@ -9,6 +9,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.BinaryBitmap
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var transportConfigStore: TransportConfigStore
     private var lastUpdatePolicy: UpdatePolicy? = null
     private var suppressLanguageChange = false
+    private var advancedVisible = false
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -82,6 +84,7 @@ class MainActivity : AppCompatActivity() {
 
         setupLanguageControls()
         setupPermissionControls()
+        setupAdvancedSection()
 
         binding.executeButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
@@ -183,16 +186,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupAdvancedSection() {
+        binding.advancedToggleButton.setOnClickListener {
+            advancedVisible = !advancedVisible
+            renderAdvancedSection()
+        }
+        renderAdvancedSection()
+    }
+
+    private fun renderAdvancedSection() {
+        binding.advancedSection.visibility = if (advancedVisible) View.VISIBLE else View.GONE
+        binding.advancedToggleButton.text = getString(
+            if (advancedVisible) R.string.hide_advanced else R.string.show_advanced
+        )
+    }
+
     private fun renderPermissionStatus() {
         val snapshot = PermissionStatus.snapshot(this)
-        val enabled = getString(R.string.permission_enabled)
-        val disabled = getString(R.string.permission_disabled)
-        val lines = listOf(
-            getString(R.string.permission_status_format, getString(R.string.usage_access_label), if (snapshot.usageAccess) enabled else disabled),
-            getString(R.string.permission_status_format, getString(R.string.install_unknown_apps_label), if (snapshot.installUnknownApps) enabled else disabled),
-            getString(R.string.permission_status_format, getString(R.string.notifications_label), if (snapshot.notificationPermission) enabled else disabled),
-            getString(R.string.permission_status_format, getString(R.string.battery_optimization_label), if (snapshot.ignoringBatteryOptimizations) enabled else disabled)
-        )
+        val missing = mutableListOf<String>()
+        if (!snapshot.notificationPermission) missing += getString(R.string.notifications_label)
+        if (!snapshot.ignoringBatteryOptimizations) missing += getString(R.string.battery_optimization_label)
+        if (!snapshot.usageAccess) missing += getString(R.string.usage_access_label)
+        if (!snapshot.installUnknownApps) missing += getString(R.string.install_unknown_apps_label)
+
+        val lines = mutableListOf<String>()
+        lines += if (missing.isEmpty()) {
+            getString(R.string.setup_ready) + " — " + getString(R.string.setup_summary_ready)
+        } else {
+            getString(R.string.setup_needs_attention) + " — " + getString(
+                R.string.setup_summary_needs_attention,
+                missing.joinToString(", ")
+            )
+        }
+        lines += ""
+        lines += "• ${getString(R.string.notifications_label)}: ${if (snapshot.notificationPermission) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
+        lines += "• ${getString(R.string.battery_optimization_label)}: ${if (snapshot.ignoringBatteryOptimizations) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
+        lines += "• ${getString(R.string.usage_access_label)}: ${if (snapshot.usageAccess) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
+        lines += "• ${getString(R.string.install_unknown_apps_label)}: ${if (snapshot.installUnknownApps) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
         binding.permissionStatusOutput.text = lines.joinToString("\n")
     }
 

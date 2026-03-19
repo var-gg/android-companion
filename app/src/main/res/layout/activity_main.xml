@@ -18,25 +18,25 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:text="@string/home_subtitle"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
-            android:id="@+id/versionOutput"
+            android:id="@+id/remoteStatusOutput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/result_background"
-            android:fontFamily="monospace"
             android:padding="12dp"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
+            android:text="@string/remote_status_idle"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textIsSelectable="true" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="@string/permissions_section_title"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/permissions_section_desc"
+            android:text="@string/permissions_section_desc_compact"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
@@ -53,35 +53,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/result_background"
-            android:fontFamily="monospace"
             android:padding="12dp"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/grantUsageAccessButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/grant_usage_access" />
-
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/allowInstallsButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/allow_app_installs" />
-        </LinearLayout>
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textIsSelectable="true" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,7 +71,9 @@
                 android:layout_weight="1"
                 android:text="@string/allow_notifications" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/batteryOptimizationButton"
@@ -105,64 +81,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/battery_optimization" />
+                android:text="@string/battery_optimization_short" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/language_section_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/language_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
-
-        <RadioGroup
-            android:id="@+id/languageRadioGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/languageSystemRadio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/language_system" />
-
-            <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/languageKoRadio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="@string/language_korean" />
-
-            <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/languageEnRadio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="@string/language_english" />
-        </RadioGroup>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/update_section_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/update_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -171,48 +91,32 @@
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/checkUpdateButton"
+                android:id="@+id/grantUsageAccessButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/check_update" />
+                android:text="@string/grant_usage_access" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/updateNowButton"
+                android:id="@+id/allowInstallsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/update_now" />
+                android:text="@string/allow_app_installs" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/updateStatusOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/result_background"
-            android:fontFamily="monospace"
-            android:padding="12dp"
-            android:text="@string/update_status_unknown"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="@string/pairing_section_title"
+            android:text="@string/pairing_section_title_compact"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/pairing_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <TextView
             android:id="@+id/tailscaleStatusOutput"
@@ -220,10 +124,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/result_background"
-            android:fontFamily="monospace"
             android:padding="12dp"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textIsSelectable="true" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -239,7 +142,9 @@
                 android:layout_weight="1"
                 android:text="@string/install_tailscale" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/openTailscaleButton"
@@ -275,9 +180,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/scan_pairing_qr" />
+                android:text="@string/scan_qr_short" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/importPairingImageButton"
@@ -285,9 +192,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/import_pairing_image" />
+                android:text="@string/import_qr_image_short" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/importPairingCodeButton"
@@ -295,21 +204,21 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/import_pairing_code" />
+                android:text="@string/import_code_short" />
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="@string/remote_section_title"
+            android:text="@string/remote_section_title_compact"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/remote_section_desc"
+            android:text="@string/remote_section_desc_compact"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -368,16 +277,6 @@
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/saveRemoteConfigButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/save" />
-
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/testRemoteConnectionButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
@@ -385,7 +284,9 @@
                 android:layout_weight="1"
                 android:text="@string/test_connection" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/registerRemoteButton"
@@ -394,13 +295,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/register_device" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/startRemoteButton"
@@ -408,8 +306,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/start_remote" />
+        </LinearLayout>
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/stopRemoteButton"
@@ -418,142 +321,230 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/stop_remote" />
+
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveRemoteConfigButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/save" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/remoteStatusOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/result_background"
-            android:fontFamily="monospace"
-            android:padding="12dp"
-            android:text="@string/remote_status_idle"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
-
-        <TextView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/advancedToggleButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/manual_section_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+            android:layout_marginTop="16dp"
+            android:text="@string/show_advanced" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/advancedSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/manual_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_json_command">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/commandInput"
+            <TextView
+                android:id="@+id/versionOutput"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:gravity="top|start"
-                android:inputType="textMultiLine"
-                android:text='{
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/result_background"
+                android:padding="12dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/language_section_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <RadioGroup
+                android:id="@+id/languageRadioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/languageSystemRadio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/language_system" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/languageKoRadio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/language_korean" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/languageEnRadio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/language_english" />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/update_section_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/checkUpdateButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/check_update" />
+
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/updateNowButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/update_now" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/updateStatusOutput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/result_background"
+                android:padding="12dp"
+                android:text="@string/update_status_unknown"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/manual_section_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/hint_json_command">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/commandInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:text='{
   "action": "health_ping",
   "params": {}
 }' />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/executeButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/execute_command" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
+            </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/samplePingButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
+                android:id="@+id/executeButton"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/sample_ping" />
+                android:layout_marginTop="12dp"
+                android:text="@string/execute_command" />
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/sampleListAppsButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/sample_apps" />
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/samplePingButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/sample_ping" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/sampleUpdateButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sampleListAppsButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/sample_apps" />
+
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sampleUpdateButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/sample_update" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/sample_update" />
+                android:layout_marginTop="16dp"
+                android:text="@string/result_section_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <TextView
+                android:id="@+id/resultOutput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/result_background"
+                android:fontFamily="monospace"
+                android:padding="12dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/logs_section_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <TextView
+                android:id="@+id/recentLogsOutput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/result_background"
+                android:fontFamily="monospace"
+                android:padding="12dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textIsSelectable="true" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/result_section_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/result_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
-
-        <TextView
-            android:id="@+id/resultOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/result_background"
-            android:fontFamily="monospace"
-            android:padding="12dp"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/logs_section_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/logs_section_desc"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
-
-        <TextView
-            android:id="@+id/recentLogsOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/result_background"
-            android:fontFamily="monospace"
-            android:padding="12dp"
-            android:textIsSelectable="true"
-            android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>
