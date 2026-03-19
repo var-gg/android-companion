@@ -1,0 +1,62 @@
+catalog_version: "0.1"
+app_id: "android:com.nhn.android.nmap"
+
+capability:
+  local_slug: "place-open"
+
+  semantic:
+    normalized_key: "merchant.open"
+    status: "hypothesized"
+    hypotheses:
+      - "place.open"
+      - "merchant.open"
+
+  title: "Open a place by coordinate and name"
+  summary: "Open a named location in NAVER Map using latitude, longitude, and name."
+
+  preconditions:
+    app_installed: true
+    login_required: false
+    location_permission_required: false
+    region_lock: "KR-centric service"
+
+  expected_outcome:
+    landing: "place_surface"
+    fallback_behavior: "May open a general map pin or place sheet depending on the app version"
+
+  risk:
+    side_effect_class: "navigation_only"
+    user_confirmation_expected: false
+    agent_safe_to_attempt: false
+
+  status:
+    evidence: "official_doc"
+    runtime: "untested"
+    freshness: "fresh"
+
+  confidence: "medium"
+
+  surfaces:
+    - id: "nmap-place-v1"
+      type: "custom_scheme"
+      uri_template: "nmap://place?lat={lat}&lng={lng}&name={name}&appname={appname}"
+      intent:
+        action: "android.intent.action.VIEW"
+        package_name: "com.nhn.android.nmap"
+      routing:
+        may_show_chooser: false
+        notes: "Semantics look like place-open, but should be runtime-verified before green-tier use"
+
+  verification:
+    last_verified_at: null
+    samples: []
+
+  evidence:
+    - id: "official-doc-url-scheme"
+      type: "official_doc"
+      path: "../evidence/2026-03-19-official-url-scheme.md"
+      url: "https://guide.ncloud-docs.com/docs/en/maps-url-scheme"
+      observed_at: "2026-03-19T16:20:00+09:00"
+
+  notes:
+    - "Good candidate for first device-side runtime verification."

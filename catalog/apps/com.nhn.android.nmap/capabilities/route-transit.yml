@@ -1,0 +1,60 @@
+catalog_version: "0.1"
+app_id: "android:com.nhn.android.nmap"
+
+capability:
+  local_slug: "route-transit"
+
+  semantic:
+    normalized_key: "route.transit"
+    status: "confirmed"
+    hypotheses: []
+
+  title: "Open public transit route"
+  summary: "Open NAVER Map public transit directions between two points."
+
+  preconditions:
+    app_installed: true
+    login_required: false
+    location_permission_required: false
+    region_lock: "KR-centric service"
+
+  expected_outcome:
+    landing: "route_public_transit"
+    fallback_behavior: "Transit options may vary by coverage, time, and region"
+
+  risk:
+    side_effect_class: "navigation_only"
+    user_confirmation_expected: false
+    agent_safe_to_attempt: true
+
+  status:
+    evidence: "official_doc"
+    runtime: "untested"
+    freshness: "fresh"
+
+  confidence: "medium"
+
+  surfaces:
+    - id: "nmap-route-public-v1"
+      type: "custom_scheme"
+      uri_template: "nmap://route/public?slat={slat}&slng={slng}&sname={sname}&dlat={dlat}&dlng={dlng}&dname={dname}&appname={appname}"
+      intent:
+        action: "android.intent.action.VIEW"
+        package_name: "com.nhn.android.nmap"
+      routing:
+        may_show_chooser: false
+        notes: "Transit-specific route surface from official docs"
+
+  verification:
+    last_verified_at: null
+    samples: []
+
+  evidence:
+    - id: "official-doc-url-scheme"
+      type: "official_doc"
+      path: "../evidence/2026-03-19-official-url-scheme.md"
+      url: "https://guide.ncloud-docs.com/docs/en/maps-url-scheme"
+      observed_at: "2026-03-19T16:20:00+09:00"
+
+  notes:
+    - "Can later split subway/bus-specific behavior if runtime differences matter."

@@ -29,6 +29,7 @@ It is a capability-oriented catalog that stores:
 - support unknown / partial / broken states
 - prepare for issue-form based intake
 - keep Android companion runtime separate from registry data
+- land real first-party samples such as NAVER Map with official URL Scheme evidence
 
 ## Not in scope yet
 

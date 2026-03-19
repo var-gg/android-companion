@@ -1,0 +1,60 @@
+catalog_version: "0.1"
+app_id: "android:com.nhn.android.nmap"
+
+capability:
+  local_slug: "search-query"
+
+  semantic:
+    normalized_key: "place.search"
+    status: "confirmed"
+    hypotheses: []
+
+  title: "Search places in NAVER Map"
+  summary: "Open NAVER Map search results for a text query."
+
+  preconditions:
+    app_installed: true
+    login_required: false
+    location_permission_required: false
+    region_lock: "KR-centric service"
+
+  expected_outcome:
+    landing: "search_results"
+    fallback_behavior: "Result quality depends on query and region coverage"
+
+  risk:
+    side_effect_class: "navigation_only"
+    user_confirmation_expected: false
+    agent_safe_to_attempt: true
+
+  status:
+    evidence: "official_doc"
+    runtime: "untested"
+    freshness: "fresh"
+
+  confidence: "medium"
+
+  surfaces:
+    - id: "nmap-search-v1"
+      type: "custom_scheme"
+      uri_template: "nmap://search?query={query}&appname={appname}"
+      intent:
+        action: "android.intent.action.VIEW"
+        package_name: "com.nhn.android.nmap"
+      routing:
+        may_show_chooser: false
+        notes: "Official doc also includes bus search as nmap://search/bus?query=..."
+
+  verification:
+    last_verified_at: null
+    samples: []
+
+  evidence:
+    - id: "official-doc-url-scheme"
+      type: "official_doc"
+      path: "../evidence/2026-03-19-official-url-scheme.md"
+      url: "https://guide.ncloud-docs.com/docs/en/maps-url-scheme"
+      observed_at: "2026-03-19T16:20:00+09:00"
+
+  notes:
+    - "Bus search may deserve a separate transit-specific capability later."

@@ -1,0 +1,32 @@
+catalog_version: "0.1"
+
+app:
+  id: "android:com.nhn.android.nmap"
+  package_name: "com.nhn.android.nmap"
+  display_name: "NAVER Map"
+  developer_name: "NAVER Cloud / NAVER"
+  platform: "android"
+  regions: ["KR"]
+  category_tags: ["maps", "navigation", "local-search"]
+
+  identity:
+    signing_cert_sha256: []
+    app_link_domains: []
+    custom_scheme_prefixes: ["nmap"]
+
+  source_policy:
+    allowed_methods:
+      - official_doc
+      - public_web_reference
+      - manifest_observation_on_owned_device
+      - blackbox_runtime_test
+      - community_report
+    disallowed_methods:
+      - root_only_hooks
+      - nonpublic_reverse_engineering
+      - auth_bypass
+      - traffic_tampering
+
+  freshness:
+    last_reviewed_at: "2026-03-19T16:20:00+09:00"
+    review_interval_days: 90

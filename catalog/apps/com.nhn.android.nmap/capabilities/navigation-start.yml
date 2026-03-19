@@ -1,0 +1,60 @@
+catalog_version: "0.1"
+app_id: "android:com.nhn.android.nmap"
+
+capability:
+  local_slug: "navigation-start"
+
+  semantic:
+    normalized_key: "navigation.start"
+    status: "confirmed"
+    hypotheses: []
+
+  title: "Start navigation intent"
+  summary: "Open the NAVER Map navigation surface, optionally with a destination."
+
+  preconditions:
+    app_installed: true
+    login_required: false
+    location_permission_required: true
+    region_lock: "KR-centric service"
+
+  expected_outcome:
+    landing: "navigation_surface"
+    fallback_behavior: "Without destination, may open a generic navigation-ready surface"
+
+  risk:
+    side_effect_class: "stateful"
+    user_confirmation_expected: true
+    agent_safe_to_attempt: false
+
+  status:
+    evidence: "official_doc"
+    runtime: "untested"
+    freshness: "fresh"
+
+  confidence: "medium"
+
+  surfaces:
+    - id: "nmap-navigation-v1"
+      type: "custom_scheme"
+      uri_template: "nmap://navigation?dlat={dlat}&dlng={dlng}&dname={dname}&appname={appname}"
+      intent:
+        action: "android.intent.action.VIEW"
+        package_name: "com.nhn.android.nmap"
+      routing:
+        may_show_chooser: false
+        notes: "Treat more cautiously than passive map/search surfaces because it pushes into navigation mode"
+
+  verification:
+    last_verified_at: null
+    samples: []
+
+  evidence:
+    - id: "official-doc-url-scheme"
+      type: "official_doc"
+      path: "../evidence/2026-03-19-official-url-scheme.md"
+      url: "https://guide.ncloud-docs.com/docs/en/maps-url-scheme"
+      observed_at: "2026-03-19T16:20:00+09:00"
+
+  notes:
+    - "User confirmation should precede agent-triggered use in most cases."
