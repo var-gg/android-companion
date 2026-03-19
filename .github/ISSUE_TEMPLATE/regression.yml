@@ -1,0 +1,54 @@
+name: Regression / stale report
+description: Report a broken or stale capability
+title: "[regression] "
+labels:
+  - catalog:regression
+  - stale-candidate
+body:
+  - type: input
+    id: package_name
+    attributes:
+      label: Package name
+      placeholder: com.example.app
+    validations:
+      required: true
+  - type: input
+    id: capability_ref
+    attributes:
+      label: Capability ref
+      placeholder: search-results-open
+    validations:
+      required: true
+  - type: input
+    id: current_version
+    attributes:
+      label: Current app version
+      placeholder: 1.2.3
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - broken
+        - partial
+        - wrong_screen
+        - chooser_shown
+        - auth_gated
+        - removed
+    validations:
+      required: true
+  - type: textarea
+    id: observed_behavior
+    attributes:
+      label: Observed behavior
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+  - type: input
+    id: device_info
+    attributes:
+      label: Device / Android version
+      placeholder: SM-S928N / Android 15

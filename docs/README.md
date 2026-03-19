@@ -79,6 +79,7 @@ Read:
 - [12-backlog.md](./12-backlog.md) — near-term open work
 - [13-remote-transport-alpha.md](./13-remote-transport-alpha.md) — polling-based remote control alpha contract
 - [14-pairing-over-tailscale.md](./14-pairing-over-tailscale.md) — Tailscale-first pairing bootstrap and acpair link contract
+- [17-capability-registry-v0.1.md](./17-capability-registry-v0.1.md) — capability registry scaffold and operating model
 
 ## Reading philosophy
 If you only read one product document, read [00-overview.md](./00-overview.md).

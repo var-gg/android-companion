@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://var.gg/schemas/android-capability-registry/app.schema.json",
+  "title": "Android Capability Registry App Record",
+  "type": "object",
+  "required": ["catalog_version", "app"],
+  "properties": {
+    "catalog_version": { "type": "string", "const": "0.1" },
+    "app": {
+      "type": "object",
+      "required": ["id", "package_name", "display_name", "platform"],
+      "properties": {
+        "id": { "type": "string" },
+        "package_name": { "type": "string" },
+        "display_name": { "type": "string" },
+        "developer_name": { "type": ["string", "null"] },
+        "platform": { "type": "string", "const": "android" },
+        "regions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "category_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "identity": {
+          "type": "object",
+          "properties": {
+            "signing_cert_sha256": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "app_link_domains": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "custom_scheme_prefixes": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        },
+        "source_policy": {
+          "type": "object",
+          "properties": {
+            "allowed_methods": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "disallowed_methods": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        },
+        "freshness": {
+          "type": "object",
+          "properties": {
+            "last_reviewed_at": { "type": "string" },
+            "review_interval_days": { "type": "number" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

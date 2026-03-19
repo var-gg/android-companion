@@ -38,10 +38,13 @@ Implemented in v0.2.0-alpha2:
 
 ## Repository layout
 - `app/` Android app
+- `catalog/` canonical capability registry source data (v0.1 scaffold)
 - `docs/` product / architecture / trust-boundary / roadmap docs
 - `.github/workflows/android-release.yml` CI/CD for APK build + release asset publishing
 - `scripts/release.ps1` helper for tag-based release flow
 - `scripts/generate-update-manifest.mjs` helper for release manifest generation
+- `scripts/validate-catalog.mjs` scaffold validator for registry records
+- `scripts/build-catalog-json.mjs` scaffold JSON export placeholder
 
 Start with [`docs/README.md`](./docs/README.md) for the doc-first reading path.
 

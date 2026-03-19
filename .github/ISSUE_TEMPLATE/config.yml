@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Research / taxonomy discussion
+    url: https://github.com/var-gg/android-companion/discussions
+    about: Use Discussions for meaning debates, taxonomy proposals, and unresolved interpretation work.

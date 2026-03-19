@@ -1,0 +1,54 @@
+name: New app intake
+description: Register a new Android app for the capability registry
+title: "[app] "
+labels:
+  - catalog:new-app
+  - needs-triage
+body:
+  - type: input
+    id: package_name
+    attributes:
+      label: Package name
+      placeholder: com.example.app
+    validations:
+      required: true
+  - type: input
+    id: display_name
+    attributes:
+      label: App display name
+      placeholder: Example App
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Primary category
+      options:
+        - commerce
+        - delivery
+        - mobility
+        - finance
+        - content
+        - social
+        - utility
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: known_surfaces
+    attributes:
+      label: Known schemes / domains / intent clues
+      description: One per line
+  - type: textarea
+    id: public_sources
+    attributes:
+      label: Public source links
+  - type: checkboxes
+    id: policy_check
+    attributes:
+      label: Collection policy check
+      options:
+        - label: I only used public docs, public web references, or black-box tests on a device I own.
+          required: true
+        - label: I did not use root-only hooks, auth bypass, or non-public reverse engineering artifacts.
+          required: true
