@@ -14,9 +14,12 @@ class CommandLogStore(context: Context) {
             normalized.put("log_id", UUID.randomUUID().toString())
         }
         val items = readAllMutable()
-        items.put(0, normalized)
-        trim(items)
-        save(items)
+        val updatedItems = JSONArray().put(normalized)
+        for (i in 0 until items.length()) {
+            items.opt(i)?.let { updatedItems.put(it) }
+        }
+        trim(updatedItems)
+        save(updatedItems)
         return normalized
     }
 
