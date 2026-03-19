@@ -55,9 +55,13 @@ jobs:
           fi
 
       - name: Decode signing keystore when configured
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         shell: bash
-        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
+          fi
 
       - name: Build debug APK
         if: github.event_name == 'workflow_dispatch'
