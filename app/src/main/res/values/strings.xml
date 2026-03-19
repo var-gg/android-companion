@@ -88,6 +88,14 @@
     <string name="result_section_desc">Structured JSON output from the last command.</string>
     <string name="logs_section_title">Recent command logs</string>
     <string name="logs_section_desc">Recent command history for quick inspection.</string>
+    <string name="clear_logs">Clear logs</string>
+    <string name="rerun_log">Re-run selected</string>
+    <string name="logs_empty">No command logs yet.</string>
+    <string name="log_detail_title">Selected log detail</string>
+    <string name="log_detail_empty">Select a command log to inspect it.</string>
+    <string name="status_logs_cleared">Command logs cleared</string>
+    <string name="status_log_missing_command">This log entry does not contain a stored command payload.</string>
+    <string name="status_rerunning_log">Re-running %1$s from stored log payload.</string>
     <string name="status_remote_config_saved">Remote config saved</string>
     <string name="status_remote_started">Remote polling service started</string>
     <string name="status_remote_stopped">Remote polling service stopped</string>

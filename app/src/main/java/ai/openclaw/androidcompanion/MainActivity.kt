@@ -10,6 +10,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.BinaryBitmap
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private var lastUpdatePolicy: UpdatePolicy? = null
     private var suppressLanguageChange = false
     private var advancedVisible = false
+    private var selectedLogIndex: Int? = null
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -115,6 +118,15 @@ class MainActivity : AppCompatActivity() {
         binding.saveRemoteConfigButton.setOnClickListener {
             saveRemoteConfig()
             renderStatus(getString(R.string.status_remote_config_saved))
+        }
+        binding.clearLogsButton.setOnClickListener {
+            commandLogStore.clear()
+            selectedLogIndex = null
+            renderRecentCommands()
+            renderStatus(getString(R.string.status_logs_cleared))
+        }
+        binding.rerunLogButton.setOnClickListener {
+            rerunSelectedLog()
         }
         binding.startRemoteButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
@@ -401,7 +413,10 @@ class MainActivity : AppCompatActivity() {
             renderResult(jsonError("invalid_json", e.message ?: "Malformed JSON input"))
             return
         }
+        executeCommandJson(json)
+    }
 
+    private fun executeCommandJson(json: JSONObject) {
         val envelope = CommandEnvelope.fromJson(json)
         if (envelope.action.isBlank()) {
             renderResult(jsonError("missing_action", "action is required"))
@@ -409,21 +424,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         thread {
+            val startedAt = Instant.now().toString()
             val result = engine.execute(envelope)
             if (envelope.action == "check_self_update" && result.optBoolean("ok", false)) {
                 lastUpdatePolicy = UpdatePolicyEvaluator.fromResult(result)
             }
             commandLogStore.append(
                 JSONObject()
-                    .put("timestamp", Instant.now().toString())
+                    .put("timestamp", startedAt)
                     .put("mode", "manual")
                     .put("action", envelope.action)
                     .put("request_id", envelope.requestId)
                     .put("ok", result.optBoolean("ok", false))
+                    .put("command", JSONObject(json.toString()))
+                    .put("result", JSONObject(result.toString()))
             )
             runOnUiThread {
                 renderResult(result)
-                renderRecentCommands()
+                renderRecentCommands(selectIndex = 0)
                 renderUpdateState(lastUpdatePolicy)
             }
         }
@@ -597,8 +615,87 @@ class MainActivity : AppCompatActivity() {
         binding.resultOutput.text = result.toString(2)
     }
 
-    private fun renderRecentCommands() {
-        binding.recentLogsOutput.text = commandLogStore.readAll().toString(2)
+    private fun renderRecentCommands(selectIndex: Int? = selectedLogIndex) {
+        val logs = commandLogStore.readAll()
+        binding.recentLogsList.removeAllViews()
+        if (logs.length() == 0) {
+            val emptyView = TextView(this).apply {
+                text = getString(R.string.logs_empty)
+                setPadding(12, 12, 12, 12)
+            }
+            binding.recentLogsList.addView(emptyView)
+            binding.logDetailOutput.text = getString(R.string.log_detail_empty)
+            binding.rerunLogButton.isEnabled = false
+            selectedLogIndex = null
+            return
+        }
+
+        val resolvedIndex = selectIndex?.takeIf { it in 0 until logs.length() } ?: 0
+        selectedLogIndex = resolvedIndex
+        for (i in 0 until logs.length()) {
+            val entry = logs.optJSONObject(i) ?: continue
+            val row = TextView(this).apply {
+                text = formatLogRow(entry, i == resolvedIndex)
+                setPadding(12, 12, 12, 12)
+                setBackgroundResource(R.drawable.result_background)
+                setOnClickListener { renderRecentCommands(selectIndex = i) }
+            }
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            if (i > 0) params.topMargin = 8
+            binding.recentLogsList.addView(row, params)
+        }
+        renderLogDetail(logs.optJSONObject(resolvedIndex))
+    }
+
+    private fun formatLogRow(entry: JSONObject, selected: Boolean): String {
+        val marker = if (selected) "▶" else "•"
+        val timestamp = entry.optString("timestamp").takeLast(8)
+        val action = entry.optString("action", "unknown")
+        val ok = if (entry.optBoolean("ok", false)) "ok" else "error"
+        val requestId = entry.optString("request_id").takeIf { it.isNotBlank() } ?: "-"
+        return "$marker $timestamp  $action  [$ok]  id=$requestId"
+    }
+
+    private fun renderLogDetail(entry: JSONObject?) {
+        if (entry == null) {
+            binding.logDetailOutput.text = getString(R.string.log_detail_empty)
+            binding.rerunLogButton.isEnabled = false
+            return
+        }
+        val lines = mutableListOf<String>()
+        lines += "timestamp: ${entry.optString("timestamp")}"
+        lines += "mode: ${entry.optString("mode")}"
+        lines += "action: ${entry.optString("action")}"
+        lines += "request_id: ${entry.optString("request_id")}"
+        lines += "ok: ${entry.optBoolean("ok", false)}"
+        entry.optJSONObject("command")?.let {
+            lines += ""
+            lines += "command:"
+            lines += it.toString(2)
+        }
+        entry.optJSONObject("result")?.let {
+            lines += ""
+            lines += "result:"
+            lines += it.toString(2)
+        }
+        binding.logDetailOutput.text = lines.joinToString("\n")
+        binding.rerunLogButton.isEnabled = entry.optJSONObject("command") != null
+    }
+
+    private fun rerunSelectedLog() {
+        val index = selectedLogIndex ?: return
+        val entry = commandLogStore.readAll().optJSONObject(index) ?: return
+        val command = entry.optJSONObject("command")
+        if (command == null) {
+            renderStatus(getString(R.string.status_log_missing_command))
+            return
+        }
+        binding.commandInput.setText(command.toString(2))
+        renderStatus(getString(R.string.status_rerunning_log, entry.optString("action", "command")))
+        executeCommandJson(JSONObject(command.toString()))
     }
 
     private fun renderStatus(status: String) {

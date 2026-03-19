@@ -60,6 +60,14 @@
     <string name="result_section_desc">마지막 명령의 구조화된 JSON 결과입니다.</string>
     <string name="logs_section_title">최근 명령 로그</string>
     <string name="logs_section_desc">최근 실행 이력을 빠르게 확인합니다.</string>
+    <string name="clear_logs">로그 비우기</string>
+    <string name="rerun_log">선택 로그 다시 실행</string>
+    <string name="logs_empty">아직 명령 로그가 없습니다.</string>
+    <string name="log_detail_title">선택한 로그 상세</string>
+    <string name="log_detail_empty">명령 로그를 선택하면 상세를 볼 수 있습니다.</string>
+    <string name="status_logs_cleared">명령 로그를 비웠습니다</string>
+    <string name="status_log_missing_command">이 로그에는 저장된 명령 payload가 없습니다.</string>
+    <string name="status_rerunning_log">저장된 로그 payload로 %1$s 명령을 다시 실행합니다.</string>
     <string name="status_remote_config_saved">원격 설정을 저장했습니다</string>
     <string name="status_remote_started">원격 폴링 서비스를 시작했습니다</string>
     <string name="status_remote_stopped">원격 폴링 서비스를 중지했습니다</string>

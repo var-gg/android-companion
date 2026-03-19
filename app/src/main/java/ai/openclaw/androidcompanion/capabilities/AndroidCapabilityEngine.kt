@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -159,6 +160,7 @@ class AndroidCapabilityEngine(
         val packageName = command.params.optString("package", "")
         val className = command.params.optString("class", "")
         val extrasObject = command.params.optJSONObject("extras") ?: JSONObject()
+        val resolveOnly = command.action == "test_intent" || command.params.optBoolean("resolve_only", false)
 
         val intent = Intent(action)
         if (data.isNotBlank()) intent.data = Uri.parse(data)
@@ -178,15 +180,44 @@ class AndroidCapabilityEngine(
             }
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        try {
-            context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            return jsonError(command, "intent_not_resolved", e.message ?: "No activity resolved")
-        }
-        return okAction(command)
+
+        val matches = queryIntentActivitiesCompat(intent)
+        val resolved = resolveActivityCompat(intent)
+        val packageInstalled = packageName.isBlank() || isPackageInstalled(packageName)
+        val diagnostics = okAction(command)
             .put("intent_action", action)
             .put("data", data)
             .put("package", packageName)
+            .put("class", className)
+            .put("resolve_only", resolveOnly)
+            .put("execution_context", "activity")
+            .put("package_installed", packageInstalled)
+            .put("resolve_activity", resolved?.let { describeResolveInfo(it) } ?: JSONObject.NULL)
+            .put("matched_activities_count", matches.length())
+            .put("matched_activities", matches)
+
+        if (resolveOnly) {
+            val canResolve = resolved != null || matches.length() > 0
+            diagnostics.put("ok", canResolve && packageInstalled)
+            if (!packageInstalled) {
+                diagnostics.put("likely_block_reason", "package_not_installed")
+            } else if (!canResolve) {
+                diagnostics.put("likely_block_reason", "intent_not_resolved")
+            } else if (command.params.optBoolean("background_launch_expected", false)) {
+                diagnostics.put("likely_background_launch_blocked", true)
+                diagnostics.put("likely_background_launch_message", "Intent resolves, but launching from a service/background context may still be blocked by Android background activity launch policy")
+            }
+            return diagnostics
+        }
+
+        try {
+            context.startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            return diagnostics
+                .put("ok", false)
+                .put("error", JSONObject().put("code", "intent_not_resolved").put("message", e.message ?: "No activity resolved"))
+        }
+        return diagnostics.put("launched", true)
     }
 
     private fun checkSelfUpdate(command: CommandEnvelope): JSONObject {
@@ -320,6 +351,40 @@ class AndroidCapabilityEngine(
             context.packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return runCatching {
+            packageManager.getPackageInfoCompat(packageName)
+            true
+        }.getOrDefault(false)
+    }
+
+    private fun resolveActivityCompat(intent: Intent): ResolveInfo? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.resolveActivity(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        }
+    }
+
+    private fun queryIntentActivitiesCompat(intent: Intent): JSONArray {
+        val infos = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        }
+        return JSONArray().apply { infos.forEach { put(describeResolveInfo(it)) } }
+    }
+
+    private fun describeResolveInfo(info: ResolveInfo): JSONObject {
+        val activityInfo = info.activityInfo
+        return JSONObject()
+            .put("package", activityInfo?.packageName ?: "")
+            .put("name", activityInfo?.name ?: "")
+            .put("exported", activityInfo?.exported ?: false)
     }
 
     private fun deviceIdentity(): JSONObject = JSONObject()

@@ -18,6 +18,10 @@ class CommandLogStore(context: Context) {
 
     fun readAll(): JSONArray = readAllMutable()
 
+    fun clear() {
+        prefs.edit().remove(KEY).apply()
+    }
+
     private fun readAllMutable(): JSONArray {
         val raw = prefs.getString(KEY, null) ?: return JSONArray()
         return runCatching { JSONArray(raw) }.getOrElse { JSONArray() }
@@ -25,6 +29,6 @@ class CommandLogStore(context: Context) {
 
     companion object {
         private const val KEY = "recent_command_logs"
-        private const val MAX_ITEMS = 10
+        private const val MAX_ITEMS = 50
     }
 }
