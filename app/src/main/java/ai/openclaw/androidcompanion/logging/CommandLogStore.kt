@@ -38,6 +38,43 @@ class CommandLogStore(context: Context) {
 
     fun readAll(): JSONArray = readAllMutable()
 
+    fun recent(limit: Int = MAX_ITEMS, action: String? = null, state: String? = null): JSONArray {
+        val normalizedLimit = limit.coerceIn(1, MAX_ITEMS)
+        val result = JSONArray()
+        val all = readAllMutable()
+        for (i in 0 until all.length()) {
+            val entry = all.optJSONObject(i) ?: continue
+            if (!action.isNullOrBlank() && entry.optString("action") != action) continue
+            if (!state.isNullOrBlank() && entry.optString("state") != state) continue
+            result.put(JSONObject(entry.toString()))
+            if (result.length() >= normalizedLimit) break
+        }
+        return result
+    }
+
+    fun findByLogId(logId: String): JSONObject? {
+        val all = readAllMutable()
+        for (i in 0 until all.length()) {
+            val entry = all.optJSONObject(i) ?: continue
+            if (entry.optString("log_id") == logId) {
+                return JSONObject(entry.toString())
+            }
+        }
+        return null
+    }
+
+    fun findByRequestId(requestId: String): JSONArray {
+        val result = JSONArray()
+        val all = readAllMutable()
+        for (i in 0 until all.length()) {
+            val entry = all.optJSONObject(i) ?: continue
+            if (entry.optString("request_id") == requestId) {
+                result.put(JSONObject(entry.toString()))
+            }
+        }
+        return result
+    }
+
     fun clear() {
         prefs.edit().remove(KEY).apply()
     }
@@ -59,6 +96,6 @@ class CommandLogStore(context: Context) {
 
     companion object {
         private const val KEY = "recent_command_logs"
-        private const val MAX_ITEMS = 50
+        const val MAX_ITEMS = 50
     }
 }

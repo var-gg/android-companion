@@ -7,6 +7,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -673,10 +674,20 @@ class MainActivity : AppCompatActivity() {
         selectedLogId = logs.optJSONObject(resolvedIndex)?.optString("log_id")?.takeIf { it.isNotBlank() }
         for (i in 0 until logs.length()) {
             val entry = logs.optJSONObject(i) ?: continue
+            val isSelected = i == resolvedIndex
             val row = TextView(this).apply {
-                text = formatLogRow(entry, i == resolvedIndex)
-                setPadding(12, 12, 12, 12)
-                setBackgroundResource(R.drawable.result_background)
+                text = formatLogRow(entry, isSelected)
+                setPadding(16, 14, 16, 14)
+                setBackgroundResource(if (isSelected) R.drawable.log_row_selected_background else R.drawable.log_row_background)
+                setTypeface(typeface, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
+                compoundDrawablePadding = 12
+                setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    if (isSelected) android.R.drawable.presence_online else android.R.drawable.presence_invisible,
+                    0,
+                    0,
+                    0
+                )
+                isAllCaps = false
                 setOnClickListener {
                     selectedLogId = entry.optString("log_id").takeIf { it.isNotBlank() }
                     renderRecentCommands()
@@ -693,13 +704,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun formatLogRow(entry: JSONObject, selected: Boolean): String {
-        val marker = if (selected) ">" else "•"
+        val header = if (selected) "SELECTED" else "LOG"
         val timestamp = entry.optString("timestamp").takeLast(8)
         val action = entry.optString("action", "unknown")
         val state = entry.optString("state").ifBlank { if (entry.optBoolean("ok", false)) "finished" else "failed" }
         val source = entry.optString("source").ifBlank { entry.optString("mode") }
         val requestId = entry.optString("request_id").takeIf { it.isNotBlank() } ?: "-"
-        return "$marker $timestamp  $action  [$state/$source]  id=$requestId"
+        val remoteCommandId = entry.optString("remote_command_id").takeIf { it.isNotBlank() }
+        return buildString {
+            append("$header  $timestamp  $action")
+            append("\nstate=$state  source=$source")
+            append("\nrequest_id=$requestId")
+            if (!remoteCommandId.isNullOrBlank()) {
+                append("  remote_command_id=$remoteCommandId")
+            }
+        }
     }
 
     private fun renderLogDetail(entry: JSONObject?) {

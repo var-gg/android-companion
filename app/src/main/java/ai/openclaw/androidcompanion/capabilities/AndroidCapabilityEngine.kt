@@ -1,5 +1,6 @@
 package ai.openclaw.androidcompanion.capabilities
 
+import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
@@ -10,10 +11,16 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
+import ai.openclaw.androidcompanion.logging.CommandLogStore
+import ai.openclaw.androidcompanion.settings.PermissionStatus
+import ai.openclaw.androidcompanion.transport.RemoteUiStateStore
+import ai.openclaw.androidcompanion.transport.TransportConfigStore
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
@@ -28,6 +35,9 @@ class AndroidCapabilityEngine(
     private val context: Context
 ) {
     private val packageManager: PackageManager = context.packageManager
+    private val logStore = CommandLogStore(context)
+    private val uiStateStore = RemoteUiStateStore(context)
+    private val transportConfigStore = TransportConfigStore(context)
 
     fun execute(command: CommandEnvelope): JSONObject {
         return try {
@@ -47,6 +57,9 @@ class AndroidCapabilityEngine(
                         .put("locale", Locale.getDefault().toLanguageTag())
                     )
                     .put("app", appIdentity())
+                "get_remote_status" -> getRemoteStatus(command)
+                "get_command_logs" -> getCommandLogs(command)
+                "get_execution_trace" -> getExecutionTrace(command)
                 "open_url" -> openUrl(command)
                 "launch_app" -> launchApp(command)
                 "list_installed_apps" -> listInstalledApps(command)
@@ -68,6 +81,134 @@ class AndroidCapabilityEngine(
             .put("package_name", context.packageName)
             .put("version_name", pkg.versionName)
             .put("version_code", pkg.longVersionCode)
+    }
+
+    private fun getRemoteStatus(command: CommandEnvelope): JSONObject {
+        val transport = transportConfigStore.load()
+        val uiState = uiStateStore.load()
+        val permissions = PermissionStatus.snapshot(context)
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val memoryInfo = ActivityManager.MemoryInfo().also { activityManager?.getMemoryInfo(it) }
+        val logs = logStore.readAll()
+        val lastLog = logs.optJSONObject(0)
+
+        return okAction(command)
+            .put("transport", JSONObject()
+                .put("base_url", transport.baseUrl)
+                .put("device_id", transport.deviceId)
+                .put("has_token", transport.token.isNotBlank())
+                .put("poll_interval_seconds", transport.pollIntervalSeconds)
+            )
+            .put("remote_ui", JSONObject()
+                .put("status", uiState.status)
+                .put("detail", uiState.detail)
+                .put("timestamp_epoch_ms", uiState.timestamp)
+                .put("timestamp", epochToIso(uiState.timestamp))
+                .put("last_poll_at_epoch_ms", uiState.lastPollAt)
+                .put("last_poll_at", epochToIso(uiState.lastPollAt))
+                .put("last_result_upload_at_epoch_ms", uiState.lastResultUploadAt)
+                .put("last_result_upload_at", epochToIso(uiState.lastResultUploadAt))
+                .put("last_received_command_at_epoch_ms", uiState.lastReceivedCommandAt)
+                .put("last_received_command_at", epochToIso(uiState.lastReceivedCommandAt))
+                .put("last_received_action", uiState.lastReceivedAction)
+                .put("last_received_command_id", uiState.lastReceivedCommandId)
+            )
+            .put("permissions", JSONObject()
+                .put("notifications", permissions.notificationPermission)
+                .put("ignore_battery_optimization", permissions.ignoringBatteryOptimizations)
+                .put("usage_access", permissions.usageAccess)
+                .put("install_unknown_apps", permissions.installUnknownApps)
+            )
+            .put("runtime", JSONObject()
+                .put("battery_pct", batteryManager?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: JSONObject.NULL)
+                .put("power_save_mode", powerManager?.isPowerSaveMode ?: JSONObject.NULL)
+                .put("available_memory_bytes", memoryInfo.availMem)
+                .put("low_memory", memoryInfo.lowMemory)
+            )
+            .put("logs", JSONObject()
+                .put("stored_count", logs.length())
+                .put("max_items", CommandLogStore.MAX_ITEMS)
+                .put("last_log", lastLog?.let { summarizeLog(it) } ?: JSONObject.NULL)
+            )
+    }
+
+    private fun getCommandLogs(command: CommandEnvelope): JSONObject {
+        val limit = command.params.optInt("limit", 10).coerceIn(1, CommandLogStore.MAX_ITEMS)
+        val actionFilter = command.params.optString("action").takeIf { it.isNotBlank() }
+        val stateFilter = command.params.optString("state").takeIf { it.isNotBlank() }
+        val includeCommand = command.params.optBoolean("include_command", true)
+        val includeResult = command.params.optBoolean("include_result", true)
+        val includeUpload = command.params.optBoolean("include_upload", false)
+        val items = logStore.recent(limit = limit, action = actionFilter, state = stateFilter)
+        val normalized = JSONArray()
+        for (i in 0 until items.length()) {
+            val entry = items.optJSONObject(i) ?: continue
+            normalized.put(
+                serializeLogEntry(
+                    entry = entry,
+                    includeCommand = includeCommand,
+                    includeResult = includeResult,
+                    includeUpload = includeUpload
+                )
+            )
+        }
+        return okAction(command)
+            .put("count", normalized.length())
+            .put("filters", JSONObject()
+                .put("limit", limit)
+                .put("action", actionFilter ?: JSONObject.NULL)
+                .put("state", stateFilter ?: JSONObject.NULL)
+                .put("include_command", includeCommand)
+                .put("include_result", includeResult)
+                .put("include_upload", includeUpload)
+            )
+            .put("logs", normalized)
+    }
+
+    private fun getExecutionTrace(command: CommandEnvelope): JSONObject {
+        val logId = command.params.optString("log_id").takeIf { it.isNotBlank() }
+        val requestId = command.params.optString("request_id").takeIf { it.isNotBlank() }
+        if (logId == null && requestId == null) {
+            return jsonError(command, "missing_selector", "params.log_id or params.request_id is required")
+        }
+
+        val matches = when {
+            logId != null -> JSONArray().apply {
+                logStore.findByLogId(logId)?.let { put(it) }
+            }
+            else -> logStore.findByRequestId(requestId!!)
+        }
+
+        if (matches.length() == 0) {
+            return jsonError(command, "trace_not_found", "No matching command log found")
+                .put("selector", JSONObject()
+                    .put("log_id", logId ?: JSONObject.NULL)
+                    .put("request_id", requestId ?: JSONObject.NULL)
+                )
+        }
+
+        val traceSteps = JSONArray()
+        for (i in 0 until matches.length()) {
+            val entry = matches.optJSONObject(i) ?: continue
+            traceSteps.put(buildTraceStep(entry))
+        }
+
+        val primary = matches.optJSONObject(0)
+        return okAction(command)
+            .put("selector", JSONObject()
+                .put("log_id", logId ?: JSONObject.NULL)
+                .put("request_id", requestId ?: JSONObject.NULL)
+            )
+            .put("trace_count", traceSteps.length())
+            .put("execution_trace", traceSteps)
+            .put("summary", JSONObject()
+                .put("action", primary?.optString("action") ?: JSONObject.NULL)
+                .put("state", primary?.optString("state") ?: JSONObject.NULL)
+                .put("ok", primary?.optBoolean("ok", false) ?: JSONObject.NULL)
+                .put("source", primary?.optString("source") ?: JSONObject.NULL)
+            )
     }
 
     private fun openUrl(command: CommandEnvelope): JSONObject {
@@ -307,6 +448,88 @@ class AndroidCapabilityEngine(
             .put("downloaded_to", outputFile.absolutePath)
             .put("install_prompt", true)
     }
+
+    private fun serializeLogEntry(
+        entry: JSONObject,
+        includeCommand: Boolean,
+        includeResult: Boolean,
+        includeUpload: Boolean
+    ): JSONObject {
+        val normalized = JSONObject()
+            .put("log_id", entry.optString("log_id"))
+            .put("timestamp", entry.optString("timestamp"))
+            .put("action", entry.optString("action"))
+            .put("request_id", entry.optString("request_id").ifBlank { JSONObject.NULL })
+            .put("state", entry.optString("state"))
+            .put("source", entry.optString("source").ifBlank { entry.optString("mode") })
+            .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
+            .put("remote_command_id", entry.optString("remote_command_id").ifBlank { JSONObject.NULL })
+            .put("started_at", entry.optString("started_at").ifBlank { JSONObject.NULL })
+            .put("finished_at", entry.optString("finished_at").ifBlank { JSONObject.NULL })
+            .put("error", entry.optString("error").ifBlank { JSONObject.NULL })
+            .put("upload_error", entry.optString("upload_error").ifBlank { JSONObject.NULL })
+        if (includeCommand) normalized.put("command", copyOrNull(entry.optJSONObject("command")))
+        if (includeResult) normalized.put("result", copyOrNull(entry.optJSONObject("result")))
+        if (includeUpload) {
+            normalized.put("upload_result", copyOrNull(entry.optJSONObject("upload_result")))
+            normalized.put("poll_response", copyOrNull(entry.optJSONObject("poll_response")))
+        }
+        return normalized
+    }
+
+    private fun buildTraceStep(entry: JSONObject): JSONObject {
+        val trace = JSONObject()
+            .put("log_id", entry.optString("log_id"))
+            .put("action", entry.optString("action"))
+            .put("request_id", entry.optString("request_id").ifBlank { JSONObject.NULL })
+            .put("source", entry.optString("source").ifBlank { entry.optString("mode") })
+            .put("state", entry.optString("state"))
+            .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
+
+        val timeline = JSONArray()
+        addTimelineEvent(timeline, "received", entry.optString("timestamp"), JSONObject()
+            .put("state", entry.optString("state"))
+            .put("remote_command_id", entry.optString("remote_command_id").ifBlank { JSONObject.NULL })
+        )
+        addTimelineEvent(timeline, "started", entry.optString("started_at"), null)
+        addTimelineEvent(timeline, "finished", entry.optString("finished_at"), JSONObject()
+            .put("state", entry.optString("state"))
+            .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
+        )
+        trace.put("timeline", timeline)
+        trace.put("command", copyOrNull(entry.optJSONObject("command")))
+        trace.put("result", copyOrNull(entry.optJSONObject("result")))
+        trace.put("upload", JSONObject()
+            .put("upload_result", copyOrNull(entry.optJSONObject("upload_result")))
+            .put("upload_error", entry.optString("upload_error").ifBlank { JSONObject.NULL })
+            .put("poll_response", copyOrNull(entry.optJSONObject("poll_response")))
+        )
+        return trace
+    }
+
+    private fun addTimelineEvent(timeline: JSONArray, label: String, at: String?, detail: JSONObject?) {
+        if (at.isNullOrBlank()) return
+        val item = JSONObject()
+            .put("event", label)
+            .put("at", at)
+        if (detail != null) item.put("detail", detail)
+        timeline.put(item)
+    }
+
+    private fun summarizeLog(entry: JSONObject): JSONObject {
+        return JSONObject()
+            .put("log_id", entry.optString("log_id"))
+            .put("action", entry.optString("action"))
+            .put("request_id", entry.optString("request_id").ifBlank { JSONObject.NULL })
+            .put("state", entry.optString("state"))
+            .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
+            .put("timestamp", entry.optString("timestamp"))
+            .put("finished_at", entry.optString("finished_at").ifBlank { JSONObject.NULL })
+    }
+
+    private fun copyOrNull(obj: JSONObject?): Any = obj?.let { JSONObject(it.toString()) } ?: JSONObject.NULL
+
+    private fun epochToIso(value: Long): Any = if (value > 0L) Instant.ofEpochMilli(value).toString() else JSONObject.NULL
 
     private fun isUrlReachable(url: String): Boolean {
         return runCatching {

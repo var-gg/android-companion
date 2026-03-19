@@ -10,6 +10,9 @@ class CompanionExecutor(
         return when (command.action) {
             "health_ping" -> handlers.healthPing(command)
             "device_info" -> handlers.deviceInfo(command)
+            "get_remote_status" -> handlers.getRemoteStatus(command)
+            "get_command_logs" -> handlers.getCommandLogs(command)
+            "get_execution_trace" -> handlers.getExecutionTrace(command)
             "open_url" -> handlers.openUrl(command)
             "launch_app" -> handlers.launchApp(command)
             "list_installed_apps" -> handlers.listInstalledApps(command)
@@ -26,6 +29,9 @@ class CompanionExecutor(
 interface CapabilityHandlers {
     fun healthPing(command: CommandEnvelope): JSONObject
     fun deviceInfo(command: CommandEnvelope): JSONObject
+    fun getRemoteStatus(command: CommandEnvelope): JSONObject
+    fun getCommandLogs(command: CommandEnvelope): JSONObject
+    fun getExecutionTrace(command: CommandEnvelope): JSONObject
     fun openUrl(command: CommandEnvelope): JSONObject
     fun launchApp(command: CommandEnvelope): JSONObject
     fun listInstalledApps(command: CommandEnvelope): JSONObject
