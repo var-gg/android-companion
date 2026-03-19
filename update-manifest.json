@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha12",
-  "version_name": "0.2.0-alpha12",
-  "version_code": 13,
-  "min_supported_version_code": 12,
+  "tag_name": "v0.2.0-alpha13",
+  "version_name": "0.2.0-alpha13",
+  "version_code": 14,
+  "min_supported_version_code": 13,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha12/android-companion-v0.2.0-alpha12.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha12",
-  "notes": "Adds command execution log browsing, per-entry detail and re-run, log clearing, and richer intent resolution diagnostics for remote debugging."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha13/android-companion-v0.2.0-alpha13.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha13",
+  "notes": "Adds remote-service command logging, lifecycle states, log refresh, rerun selection fixes, and minimal remote status visibility for debugging command delivery and intent execution."
 }
