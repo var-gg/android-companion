@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha7",
-  "version_name": "0.2.0-alpha7",
-  "version_code": 8,
-  "min_supported_version_code": 7,
+  "tag_name": "v0.2.0-alpha8",
+  "version_name": "0.2.0-alpha8",
+  "version_code": 9,
+  "min_supported_version_code": 8,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha7/android-companion-v0.2.0-alpha7.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha7",
-  "notes": "Adds QR image import for remote pairing and normalizes GitHub Releases to publish release APK assets for install and self-update."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha8/android-companion-v0.2.0-alpha8.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha8",
+  "notes": "Publishes the Android Companion on a stable signed release line for GitHub install and in-app update continuity, plus QR image import for pairing."
 }

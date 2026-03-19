@@ -10,4 +10,5 @@ app/build/
 keystore/
 *.jks
 *.keystore
+.signing/
 /release-notes.txt
