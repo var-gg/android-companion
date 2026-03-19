@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0-alpha11
+- redesigned the home screen around setup-critical actions instead of verbose diagnostics
+- promoted Permission Center and compacted pairing / remote connection controls
+- added product-style remote connection state tracking such as disconnected, test successful, registered, polling active, and error
+- moved advanced/manual diagnostics behind collapsed advanced sections
+- added capability registry v0.1 scaffold, issue forms, sample records, and placeholder validation/export scripts
+- bumped app version to 0.2.0-alpha11
+
 ## v0.2.0-alpha5
 - made LAN remote setup base-url first so local testing no longer assumes a bearer token
 - treated bearer token as optional for local/LAN dev mode in app copy and docs
