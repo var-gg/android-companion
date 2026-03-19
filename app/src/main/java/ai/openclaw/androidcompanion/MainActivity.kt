@@ -217,10 +217,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupPermissionControls() {
         binding.grantUsageAccessButton.setOnClickListener {
-            PermissionStatus.openUsageAccessSettings(this)
+            openSettingsOrExplain { PermissionStatus.openUsageAccessSettings(this) }
         }
         binding.allowInstallsButton.setOnClickListener {
-            PermissionStatus.openUnknownAppSourcesSettings(this)
+            openSettingsOrExplain { PermissionStatus.openUnknownAppSourcesSettings(this) }
         }
         binding.allowNotificationsButton.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -228,11 +228,17 @@ class MainActivity : AppCompatActivity() {
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else {
-                PermissionStatus.openNotificationSettings(this)
+                openSettingsOrExplain { PermissionStatus.openNotificationSettings(this) }
             }
         }
         binding.batteryOptimizationButton.setOnClickListener {
-            PermissionStatus.openBatteryOptimizationSettings(this)
+            openSettingsOrExplain { PermissionStatus.openBatteryOptimizationRequest(this) }
+        }
+        binding.openBatterySettingsButton.setOnClickListener {
+            openSettingsOrExplain { PermissionStatus.openBatteryOptimizationSettings(this) }
+        }
+        binding.openAppDetailsButton.setOnClickListener {
+            openSettingsOrExplain { PermissionStatus.openAppDetailsSettings(this) }
         }
     }
 
@@ -269,8 +275,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderPermissionStatus() {
         val snapshot = PermissionStatus.snapshot(this)
+        val notificationsReady = snapshot.notificationPermission && snapshot.notificationsEnabled
         val missing = mutableListOf<String>()
-        if (!snapshot.notificationPermission) missing += getString(R.string.notifications_label)
+        if (!notificationsReady) missing += getString(R.string.notifications_label)
         if (!snapshot.ignoringBatteryOptimizations) missing += getString(R.string.battery_optimization_label)
         if (!snapshot.usageAccess) missing += getString(R.string.usage_access_label)
         if (!snapshot.installUnknownApps) missing += getString(R.string.install_unknown_apps_label)
@@ -284,12 +291,35 @@ class MainActivity : AppCompatActivity() {
                 missing.joinToString(", ")
             )
         }
+        lines += getString(R.string.readiness_summary)
         lines += ""
-        lines += "• ${getString(R.string.notifications_label)}: ${if (snapshot.notificationPermission) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
-        lines += "• ${getString(R.string.battery_optimization_label)}: ${if (snapshot.ignoringBatteryOptimizations) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
-        lines += "• ${getString(R.string.usage_access_label)}: ${if (snapshot.usageAccess) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
-        lines += "• ${getString(R.string.install_unknown_apps_label)}: ${if (snapshot.installUnknownApps) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)}"
+        lines += formatChecklistLine(getString(R.string.readiness_item_notifications), notificationsReady)
+        lines += formatChecklistLine(getString(R.string.readiness_item_battery), snapshot.ignoringBatteryOptimizations)
+        lines += formatChecklistLine(getString(R.string.readiness_item_usage), snapshot.usageAccess)
+        lines += formatChecklistLine(getString(R.string.readiness_item_installs), snapshot.installUnknownApps)
+        lines += formatChecklistLine(getString(R.string.readiness_item_app_details), true)
         binding.permissionStatusOutput.text = lines.joinToString("\n")
+
+        val diagnostics = mutableListOf<String>()
+        diagnostics += getString(R.string.readiness_diag_background_launch)
+        diagnostics += getString(
+            R.string.readiness_diag_notifications,
+            readinessState(notificationsReady)
+        )
+        diagnostics += getString(
+            R.string.readiness_diag_battery,
+            readinessState(snapshot.ignoringBatteryOptimizations)
+        )
+        diagnostics += getString(
+            R.string.readiness_diag_usage,
+            readinessState(snapshot.usageAccess)
+        )
+        diagnostics += getString(
+            R.string.readiness_diag_installs,
+            readinessState(snapshot.installUnknownApps)
+        )
+        binding.readinessDiagnosticsOutput.text = diagnostics.joinToString("\n")
+        binding.oemFallbackOutput.text = getString(R.string.oem_fallback_copy)
     }
 
     private fun renderTailscaleStatus() {
@@ -789,6 +819,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderStatus(status: String) {
         binding.statusMessageOutput.text = status
+    }
+
+    private fun openSettingsOrExplain(openAction: () -> Boolean) {
+        if (!openAction()) {
+            renderStatus(getString(R.string.status_settings_open_failed))
+        }
+    }
+
+    private fun formatChecklistLine(label: String, ready: Boolean): String {
+        val marker = if (ready) "☑" else "☐"
+        return "$marker $label"
+    }
+
+    private fun readinessState(ready: Boolean): String {
+        return if (ready) getString(R.string.permission_enabled) else getString(R.string.permission_disabled)
     }
 
     private fun jsonError(code: String, message: String): JSONObject = JSONObject()
