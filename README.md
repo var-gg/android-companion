@@ -1,4 +1,4 @@
-# Android Companion (v0.2.0-alpha8)
+# Android Companion (v0.2.0-alpha9)
 
 Thin Android runtime / executor for a personal agent system.
 
