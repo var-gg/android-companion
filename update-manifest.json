@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha11",
-  "version_name": "0.2.0-alpha11",
-  "version_code": 12,
-  "min_supported_version_code": 11,
+  "tag_name": "v0.2.0-alpha12",
+  "version_name": "0.2.0-alpha12",
+  "version_code": 13,
+  "min_supported_version_code": 12,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha11/android-companion-v0.2.0-alpha11.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha11",
-  "notes": "Refines setup UI, makes connection state easier to understand, and adds the first capability registry scaffold for future app-surface knowledge management."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha12/android-companion-v0.2.0-alpha12.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha12",
+  "notes": "Adds command execution log browsing, per-entry detail and re-run, log clearing, and richer intent resolution diagnostics for remote debugging."
 }
