@@ -34,6 +34,14 @@
             android:textIsSelectable="true" />
 
         <TextView
+            android:id="@+id/statusMessageOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textIsSelectable="true" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -221,54 +229,70 @@
             android:text="@string/remote_section_desc_compact"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/connectionDetailsToggleButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/show_connection_details" />
+
+        <LinearLayout
+            android:id="@+id/connectionDetailsSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_remote_base_url">
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/remoteBaseUrlInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_device_id">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/remoteDeviceIdInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_token">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/remoteTokenInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_poll_interval">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/remotePollSecondsInput"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_marginTop="8dp"
+                android:hint="@string/hint_remote_base_url">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/remoteBaseUrlInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/hint_device_id">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/remoteDeviceIdInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/hint_token">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/remoteTokenInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/hint_poll_interval">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/remotePollSecondsInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

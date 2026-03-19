@@ -28,6 +28,7 @@ import ai.openclaw.androidcompanion.pairing.PairingPayload
 import ai.openclaw.androidcompanion.settings.LanguageSettings
 import ai.openclaw.androidcompanion.settings.PermissionStatus
 import ai.openclaw.androidcompanion.transport.RemotePollingService
+import ai.openclaw.androidcompanion.transport.RemoteUiStateStore
 import ai.openclaw.androidcompanion.transport.TransportConfig
 import ai.openclaw.androidcompanion.transport.TransportConfigStore
 import ai.openclaw.androidcompanion.update.UpdatePolicy
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var engine: AndroidCapabilityEngine
     private lateinit var commandLogStore: CommandLogStore
     private lateinit var transportConfigStore: TransportConfigStore
+    private lateinit var remoteUiStateStore: RemoteUiStateStore
     private var lastUpdatePolicy: UpdatePolicy? = null
     private var suppressLanguageChange = false
     private var advancedVisible = false
@@ -81,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         engine = AndroidCapabilityEngine(this)
         commandLogStore = CommandLogStore(this)
         transportConfigStore = TransportConfigStore(this)
+        remoteUiStateStore = RemoteUiStateStore(this)
 
         setupLanguageControls()
         setupPermissionControls()
@@ -105,6 +108,9 @@ class MainActivity : AppCompatActivity() {
             saveRemoteConfig()
             testRemoteConnection()
         }
+        binding.connectionDetailsToggleButton.setOnClickListener {
+            toggleConnectionDetails()
+        }
 
         binding.saveRemoteConfigButton.setOnClickListener {
             saveRemoteConfig()
@@ -115,10 +121,12 @@ class MainActivity : AppCompatActivity() {
             saveRemoteConfig()
             RemotePollingService.start(this)
             renderStatus(getString(R.string.status_remote_started))
+            renderConnectionStatus()
         }
         binding.stopRemoteButton.setOnClickListener {
             RemotePollingService.stop(this)
             renderStatus(getString(R.string.status_remote_stopped))
+            renderConnectionStatus()
         }
         binding.registerRemoteButton.setOnClickListener {
             if (isBlockedBySoftForceUpdate()) return@setOnClickListener
@@ -131,6 +139,8 @@ class MainActivity : AppCompatActivity() {
         renderPermissionStatus()
         renderRecentCommands()
         renderTailscaleStatus()
+        renderConnectionStatus()
+        renderConnectionDetailsVisibility()
         handlePairingIntent(intent)
         checkUpdateNow(silent = true)
     }
@@ -139,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         renderPermissionStatus()
         renderTailscaleStatus()
+        renderConnectionStatus()
         handlePairingIntent(intent)
     }
 
@@ -201,6 +212,22 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun toggleConnectionDetails() {
+        binding.connectionDetailsSection.visibility =
+            if (binding.connectionDetailsSection.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        renderConnectionDetailsVisibility()
+    }
+
+    private fun renderConnectionDetailsVisibility() {
+        binding.connectionDetailsToggleButton.text = getString(
+            if (binding.connectionDetailsSection.visibility == View.VISIBLE) {
+                R.string.hide_connection_details
+            } else {
+                R.string.show_connection_details
+            }
+        )
+    }
+
     private fun renderPermissionStatus() {
         val snapshot = PermissionStatus.snapshot(this)
         val missing = mutableListOf<String>()
@@ -234,6 +261,20 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.tailscale_status_missing)
         }
         binding.openTailscaleButton.isEnabled = installed
+    }
+
+    private fun renderConnectionStatus() {
+        val config = transportConfigStore.load()
+        val state = remoteUiStateStore.load()
+        val (title, detail) = when {
+            config.baseUrl.isBlank() -> getString(R.string.connection_state_setup_required) to getString(R.string.connection_state_setup_required_detail)
+            state.status == RemoteUiStateStore.STATUS_POLLING -> getString(R.string.connection_state_polling) to state.detail.ifBlank { getString(R.string.connection_state_polling_detail) }
+            state.status == RemoteUiStateStore.STATUS_REGISTERED -> getString(R.string.connection_state_registered) to state.detail.ifBlank { getString(R.string.connection_state_registered_detail) }
+            state.status == RemoteUiStateStore.STATUS_TEST_OK -> getString(R.string.connection_state_test_ok) to state.detail.ifBlank { getString(R.string.connection_state_test_ok_detail) }
+            state.status == RemoteUiStateStore.STATUS_ERROR -> getString(R.string.connection_state_error) to state.detail.ifBlank { getString(R.string.connection_state_error_detail) }
+            else -> getString(R.string.connection_state_disconnected) to getString(R.string.connection_state_disconnected_detail)
+        }
+        binding.remoteStatusOutput.text = "$title\n$detail"
     }
 
     private fun installOrOpenTailscale(forceStore: Boolean) {
@@ -314,6 +355,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.pairingCodeInput.setText(raw)
         saveRemoteConfig()
+        remoteUiStateStore.set(RemoteUiStateStore.STATUS_SETUP_REQUIRED, "Pairing imported for ${payload.label}")
         renderStatus(getString(R.string.status_pairing_imported, payload.label, payload.transport.mode) + "\n" + payload.summary())
     }
 
@@ -400,7 +442,12 @@ class MainActivity : AppCompatActivity() {
             }.getOrElse {
                 JSONObject().put("ok", false).put("error", it.message ?: it.javaClass.simpleName)
             }
-            runOnUiThread { renderStatus(result.toString(2)) }
+            runOnUiThread {
+                remoteUiStateStore.set(RemoteUiStateStore.STATUS_REGISTERED, "Registered ${config.deviceId}")
+                renderStatus(getString(R.string.connection_state_registered_detail))
+                renderResult(result)
+                renderConnectionStatus()
+            }
         }
     }
 
@@ -419,7 +466,17 @@ class MainActivity : AppCompatActivity() {
                     .put("base_url", config.baseUrl)
                     .put("error", it.message ?: it.javaClass.simpleName)
             }
-            runOnUiThread { renderStatus(result.toString(2)) }
+            runOnUiThread {
+                if (result.optBoolean("ok", false)) {
+                    remoteUiStateStore.set(RemoteUiStateStore.STATUS_TEST_OK, "Bridge responded at ${config.baseUrl}")
+                    renderStatus(getString(R.string.connection_state_test_ok_detail))
+                } else {
+                    remoteUiStateStore.set(RemoteUiStateStore.STATUS_ERROR, result.optString("error"))
+                    renderStatus(result.optString("error"))
+                }
+                renderResult(result)
+                renderConnectionStatus()
+            }
         }
     }
 
@@ -471,7 +528,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveRemoteConfig() {
-        transportConfigStore.save(currentTransportConfig())
+        val config = currentTransportConfig()
+        transportConfigStore.save(config)
+        if (config.baseUrl.isBlank()) {
+            remoteUiStateStore.set(RemoteUiStateStore.STATUS_DISCONNECTED, "Add a remote base URL or import pairing first")
+        }
     }
 
     private fun currentTransportConfig(): TransportConfig {
@@ -541,7 +602,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderStatus(status: String) {
-        binding.remoteStatusOutput.text = status
+        binding.statusMessageOutput.text = status
     }
 
     private fun jsonError(code: String, message: String): JSONObject = JSONObject()

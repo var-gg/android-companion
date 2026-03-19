@@ -21,12 +21,14 @@ class RemotePollingService : Service() {
     private lateinit var configStore: TransportConfigStore
     private lateinit var logStore: CommandLogStore
     private lateinit var engine: AndroidCapabilityEngine
+    private lateinit var uiStateStore: RemoteUiStateStore
 
     override fun onCreate() {
         super.onCreate()
         configStore = TransportConfigStore(this)
         logStore = CommandLogStore(this)
         engine = AndroidCapabilityEngine(this)
+        uiStateStore = RemoteUiStateStore(this)
         createNotificationChannel()
     }
 
@@ -34,6 +36,7 @@ class RemotePollingService : Service() {
         when (intent?.action) {
             ACTION_STOP -> {
                 running = false
+                uiStateStore.set(RemoteUiStateStore.STATUS_DISCONNECTED, "Remote polling stopped")
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY
@@ -46,6 +49,7 @@ class RemotePollingService : Service() {
     private fun startPollingLoop() {
         if (running) return
         running = true
+        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Remote polling active")
         startForeground(NOTIFICATION_ID, buildNotification("Remote polling active"))
 
         thread(name = "remote-polling-loop") {
@@ -53,6 +57,7 @@ class RemotePollingService : Service() {
             while (running) {
                 val config = configStore.load()
                 if (config.baseUrl.isBlank()) {
+                    uiStateStore.set(RemoteUiStateStore.STATUS_SETUP_REQUIRED, "Remote base URL is missing")
                     updateNotification("Waiting for remote base URL")
                     Thread.sleep(5000)
                     continue
@@ -62,6 +67,7 @@ class RemotePollingService : Service() {
                     if (!registeredThisRun) {
                         client.registerDevice(engine.execute(ai.openclaw.androidcompanion.contract.CommandEnvelope("device_info", JSONObject(), null)))
                         registeredThisRun = true
+                        uiStateStore.set(RemoteUiStateStore.STATUS_REGISTERED, "Registered ${config.deviceId}")
                         updateNotification("Registered ${config.deviceId}")
                     }
                     client.postHeartbeat(
@@ -73,6 +79,7 @@ class RemotePollingService : Service() {
                     val command = RemoteTransportClient.parseCommand(response)
                     val commandId = RemoteTransportClient.parseCommandId(response)
                     if (command != null && commandId != null) {
+                        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Executing ${command.action}")
                         updateNotification("Executing ${command.action}")
                         val result = engine.execute(command)
                         client.uploadResult(commandId, result)
@@ -84,8 +91,10 @@ class RemotePollingService : Service() {
                                 .put("request_id", command.requestId)
                                 .put("ok", result.optBoolean("ok", false))
                         )
+                        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Last command: ${command.action}")
                         updateNotification("Last command: ${command.action}")
                     } else {
+                        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Remote polling active")
                         updateNotification("Remote polling active")
                     }
                 } catch (e: Exception) {
@@ -96,6 +105,7 @@ class RemotePollingService : Service() {
                             .put("ok", false)
                             .put("error", e.message ?: e.javaClass.simpleName)
                     )
+                    uiStateStore.set(RemoteUiStateStore.STATUS_ERROR, e.message ?: e.javaClass.simpleName)
                     updateNotification("Remote error: ${e.javaClass.simpleName}")
                 }
                 val delayMs = config.pollIntervalSeconds.coerceAtLeast(10L) * 1000L
