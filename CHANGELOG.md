@@ -1,8 +1,12 @@
 # Changelog
 
 ## Unreleased
+
+## v0.2.0-alpha20
 - fixed the Logs tab's stored-log panel touch handoff so the inner log list can be scrolled directly without page scroll stealing the gesture
-- recorded NAVER Map route-mode catalog evidence more conservatively: route family is documented by path, but initial visible transit/subway tab selection is not currently guaranteed
+- expanded NAVER Map route/public findings so the catalog now records the documented route-family surface separately from unverified initial transit/subway tab control
+- kept the NAVER transit capability conservative: `route/public` remains the best documented transit-family entrypoint, but first visible in-app tab selection is still not guaranteed
+- bumped app version to 0.2.0-alpha20
 
 ## v0.2.0-alpha19
 - upgraded the Logs tab into a live operator/debug surface with explicit auto-refresh status, clearer browsing, and stronger row/detail separation

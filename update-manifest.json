@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha19",
-  "version_name": "0.2.0-alpha19",
-  "version_code": 20,
-  "min_supported_version_code": 19,
+  "tag_name": "v0.2.0-alpha20",
+  "version_name": "0.2.0-alpha20",
+  "version_code": 21,
+  "min_supported_version_code": 20,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha19/android-companion-v0.2.0-alpha19.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha19",
-  "notes": "Upgrades the Logs tab into a live operator/debug surface, expands replay detail output, and adds helpers to replay stored commands and payloads for debugging."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha20/android-companion-v0.2.0-alpha20.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha20",
+  "notes": "Fixes the Logs tab stored-log scroll handoff and expands conservative NAVER Map route/public findings without overclaiming transit-tab control."
 }

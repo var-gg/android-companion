@@ -35,5 +35,5 @@ app:
       - traffic_tampering
 
   freshness:
-    last_reviewed_at: "2026-03-19T16:20:00+09:00"
+    last_reviewed_at: "2026-03-20T13:35:00+09:00"
     review_interval_days: 90
