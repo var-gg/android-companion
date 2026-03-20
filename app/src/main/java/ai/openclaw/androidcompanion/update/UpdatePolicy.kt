@@ -12,6 +12,7 @@ data class UpdatePolicy(
     val updateAvailable: Boolean,
     val supported: Boolean,
     val apkUrl: String?,
+    val apkReachable: Boolean,
     val releaseUrl: String?,
     val notes: String?
 )
@@ -27,6 +28,7 @@ object UpdatePolicyEvaluator {
         val updateAvailable = result.optBoolean("update_available", false)
         val supported = result.optBoolean("supported", true)
         val apkUrl = result.optString("apk_url").takeIf { it.isNotBlank() }
+        val apkReachable = result.optBoolean("apk_reachable", false)
         val releaseUrl = result.optString("release_url").takeIf { it.isNotBlank() }
         val notes = result.optString("notes").takeIf { it.isNotBlank() }
 
@@ -40,6 +42,7 @@ object UpdatePolicyEvaluator {
             updateAvailable = updateAvailable,
             supported = supported,
             apkUrl = apkUrl,
+            apkReachable = apkReachable,
             releaseUrl = releaseUrl,
             notes = notes
         )

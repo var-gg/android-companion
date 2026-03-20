@@ -134,7 +134,14 @@ selected_log: -</string>
     <string name="status_pairing_expired">This pairing code has expired</string>
     <string name="status_pairing_imported">Pairing imported for %1$s (%2$s)</string>
     <string name="status_no_apk_url">No APK URL available yet. Run check update first.</string>
+    <string name="status_update_checking">Checking for updates…</string>
+    <string name="status_update_check_failed">Update check failed: %1$s</string>
+    <string name="status_update_none_available">No newer update is available. Current version: %1$s.</string>
+    <string name="status_update_available_ready">Update %1$s is available.</string>
+    <string name="status_update_publish_pending">The update exists in metadata, but the APK is not reachable yet. The release may still be publishing.</string>
+    <string name="status_update_download_started">Downloading update package…</string>
     <string name="status_update_prompt_expected">Update package downloaded; Android install prompt should appear.</string>
+    <string name="status_update_install_failed">Update could not continue: %1$s</string>
     <string name="status_update_required">Update required before continuing. Use Check update / Update now.</string>
     <string name="status_soft_force_active">Soft-force update active: update required before command execution.</string>
     <string name="status_settings_open_failed">This settings screen could not be opened directly on this device. Use App details and your phone’s Settings app as fallback.</string>
@@ -143,6 +150,7 @@ selected_log: -</string>
     <string name="update_available">Update available: %1$s</string>
     <string name="update_supported">Supported: %1$s</string>
     <string name="update_force">Force update: %1$s</string>
+    <string name="update_apk_reachable">APK reachable: %1$s</string>
     <string name="update_min_supported">Min supported versionCode: %1$d</string>
     <string name="update_apk">APK: %1$s</string>
     <string name="update_notes">Notes: %1$s</string>

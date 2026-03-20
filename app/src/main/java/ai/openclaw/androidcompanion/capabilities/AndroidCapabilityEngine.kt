@@ -574,6 +574,10 @@ class AndroidCapabilityEngine(
     private fun downloadSelfUpdate(command: CommandEnvelope): JSONObject {
         val apkUrl = command.params.optString("apk_url")
         if (apkUrl.isBlank()) return jsonError(command, "missing_apk_url", "params.apk_url is required")
+        if (!isUrlReachable(apkUrl)) {
+            return jsonError(command, "apk_not_reachable", "The published APK is not reachable yet. The release may still be publishing.")
+                .put("apk_url", apkUrl)
+        }
         val outputFile = File(context.getExternalFilesDir(null), "android-companion-update.apk")
         downloadFile(apkUrl, outputFile)
         val contentUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", outputFile)
@@ -581,10 +585,15 @@ class AndroidCapabilityEngine(
             setDataAndType(contentUri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        val resolver = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            ?: return jsonError(command, "install_intent_unavailable", "Android could not open an APK installer from this app. Check Unknown app installs permission.")
+                .put("apk_url", apkUrl)
+                .put("downloaded_to", outputFile.absolutePath)
         context.startActivity(intent)
         return okAction(command)
             .put("apk_url", apkUrl)
             .put("downloaded_to", outputFile.absolutePath)
+            .put("installer_package", resolver.activityInfo.packageName)
             .put("install_prompt", true)
     }
 
@@ -698,6 +707,9 @@ class AndroidCapabilityEngine(
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.instanceFollowRedirects = true
             connection.requestMethod = "HEAD"
+            connection.setRequestProperty("Cache-Control", "no-cache")
+            connection.setRequestProperty("Pragma", "no-cache")
+            connection.useCaches = false
             connection.connectTimeout = 10000
             connection.readTimeout = 10000
             connection.connect()
@@ -707,9 +719,18 @@ class AndroidCapabilityEngine(
     }
 
     private fun fetchJson(url: String): JSONObject {
-        val connection = URL(url).openConnection() as HttpURLConnection
+        val separator = if (url.contains("?")) "&" else "?"
+        val cacheBustedUrl = if (url.contains("raw.githubusercontent.com") || url.contains("api.github.com")) {
+            "$url${separator}_=${System.currentTimeMillis()}"
+        } else {
+            url
+        }
+        val connection = URL(cacheBustedUrl).openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/json")
+        connection.setRequestProperty("Cache-Control", "no-cache")
+        connection.setRequestProperty("Pragma", "no-cache")
+        connection.useCaches = false
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
         connection.connect()
@@ -720,6 +741,9 @@ class AndroidCapabilityEngine(
     private fun downloadFile(url: String, outputFile: File) {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
+        connection.setRequestProperty("Cache-Control", "no-cache")
+        connection.setRequestProperty("Pragma", "no-cache")
+        connection.useCaches = false
         connection.connectTimeout = 15000
         connection.readTimeout = 30000
         connection.connect()

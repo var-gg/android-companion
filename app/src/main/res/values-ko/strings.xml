@@ -95,7 +95,14 @@
     <string name="status_pairing_expired">이 페어링 코드는 만료되었습니다</string>
     <string name="status_pairing_imported">%1$s (%2$s)용 페어링을 가져왔습니다</string>
     <string name="status_no_apk_url">아직 APK URL이 없습니다. 먼저 업데이트 확인을 실행하세요.</string>
+    <string name="status_update_checking">업데이트를 확인하는 중입니다…</string>
+    <string name="status_update_check_failed">업데이트 확인 실패: %1$s</string>
+    <string name="status_update_none_available">더 새로운 업데이트가 없습니다. 현재 버전: %1$s</string>
+    <string name="status_update_available_ready">업데이트 %1$s 을(를) 설치할 수 있습니다.</string>
+    <string name="status_update_publish_pending">업데이트 메타데이터는 보이지만 APK가 아직 열리지 않습니다. 릴리스 게시가 아직 끝나지 않았을 수 있습니다.</string>
+    <string name="status_update_download_started">업데이트 패키지를 내려받는 중입니다…</string>
     <string name="status_update_prompt_expected">업데이트 패키지를 내려받았습니다. 안드로이드 설치 창이 떠야 합니다.</string>
+    <string name="status_update_install_failed">업데이트를 계속할 수 없습니다: %1$s</string>
     <string name="status_update_required">계속 진행하려면 업데이트가 필요합니다. 업데이트 확인 / 지금 업데이트를 사용하세요.</string>
     <string name="status_soft_force_active">소프트 강제 업데이트 상태입니다. 명령 실행 전에 업데이트가 필요합니다.</string>
     <string name="status_settings_open_failed">이 설정 화면을 이 기기에서 직접 열 수 없었습니다. 대체 경로로 앱 상세와 휴대폰 설정 앱을 사용하세요.</string>
@@ -104,6 +111,7 @@
     <string name="update_available">업데이트 가능: %1$s</string>
     <string name="update_supported">지원 상태: %1$s</string>
     <string name="update_force">강제 업데이트: %1$s</string>
+    <string name="update_apk_reachable">APK 도달 가능: %1$s</string>
     <string name="update_min_supported">최소 지원 versionCode: %1$d</string>
     <string name="update_apk">APK: %1$s</string>
     <string name="update_notes">메모: %1$s</string>

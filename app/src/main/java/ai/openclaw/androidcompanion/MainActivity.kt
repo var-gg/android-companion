@@ -588,6 +588,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkUpdateNow(silent: Boolean = false) {
+        if (!silent) renderStatus(getString(R.string.status_update_checking))
         thread {
             val result = engine.execute(CommandEnvelope("check_self_update", JSONObject(), null))
             val policy = if (result.optBoolean("ok", false)) UpdatePolicyEvaluator.fromResult(result) else null
@@ -595,6 +596,12 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 renderUpdateState(policy)
                 if (!silent) renderResult(result)
+                when {
+                    policy == null -> renderStatus(getString(R.string.status_update_check_failed, result.optString("message").ifBlank { result.optString("error") }.ifBlank { result.optString("code") }))
+                    policy.updateAvailable && !policy.apkUrl.isNullOrBlank() && !policy.apkReachable -> renderStatus(getString(R.string.status_update_publish_pending))
+                    policy.updateAvailable -> renderStatus(getString(R.string.status_update_available_ready, policy.latestVersionName))
+                    else -> renderStatus(getString(R.string.status_update_none_available, policy.currentVersionName))
+                }
             }
         }
     }
@@ -611,6 +618,7 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.update_available, policy.updateAvailable.toString()),
             getString(R.string.update_supported, policy.supported.toString()),
             getString(R.string.update_force, policy.forceUpdate.toString()),
+            getString(R.string.update_apk_reachable, policy.apkReachable.toString()),
             policy.minSupportedVersionCode?.let { getString(R.string.update_min_supported, it) },
             policy.apkUrl?.let { getString(R.string.update_apk, it) },
             policy.notes?.let { getString(R.string.update_notes, it) }
@@ -619,11 +627,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun triggerUpdateNow() {
-        val apkUrl = lastUpdatePolicy?.apkUrl
-        if (apkUrl.isNullOrBlank()) { renderStatus(getString(R.string.status_no_apk_url)); return }
+        val policy = lastUpdatePolicy
+        if (policy == null) {
+            renderStatus(getString(R.string.status_no_apk_url))
+            return
+        }
+        if (!policy.updateAvailable) {
+            renderStatus(getString(R.string.status_update_none_available, policy.currentVersionName))
+            return
+        }
+        val apkUrl = policy.apkUrl
+        if (apkUrl.isNullOrBlank()) {
+            renderStatus(getString(R.string.status_no_apk_url))
+            return
+        }
+        if (!policy.apkReachable) {
+            renderStatus(getString(R.string.status_update_publish_pending))
+            return
+        }
+        renderStatus(getString(R.string.status_update_download_started))
         thread {
             val result = engine.execute(CommandEnvelope("download_self_update", JSONObject().put("apk_url", apkUrl), null))
-            runOnUiThread { renderResult(result); renderStatus(getString(R.string.status_update_prompt_expected)) }
+            runOnUiThread {
+                renderResult(result)
+                if (result.optBoolean("ok", false)) {
+                    renderStatus(getString(R.string.status_update_prompt_expected))
+                } else {
+                    renderStatus(getString(R.string.status_update_install_failed, result.optString("message").ifBlank { result.optString("error") }.ifBlank { result.optString("code") }))
+                }
+            }
         }
     }
 

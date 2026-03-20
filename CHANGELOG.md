@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.2.0-alpha22
+- made in-app self-update status explicit instead of silently claiming success
+- check update now reports checking failure, no update available, update ready, and publish-pending APK states
+- update now refuses manifest-only / not-yet-reachable APKs with a clear message instead of a no-op feeling
+- download/install handoff now returns clearer installer failures and uses no-cache fetches for manifest/release reads
+- bumped app version to 0.2.0-alpha22
+
 ## v0.2.0-alpha21
 - replaced the Logs tab stored-log list's nested ScrollView + LinearLayout stack with a fixed-height RecyclerView so the list owns a real bounded inner scroll region
 - kept the selected log detail panel below the list instead of letting long stored-log content expand the whole page and shove detail further down
