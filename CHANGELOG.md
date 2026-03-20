@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0-alpha16
+- added operator-grade remote lifecycle telemetry for service state, polls, heartbeats, command fetch/deliver/execute/upload milestones, and categorized last-error reporting
+- refactored command log storage to persist per-command lifecycle phases and transport/execution/upload failures for later inspection
+- split the giant single-page UI into Home / Connect / Logs / Ops sections with lighter operator navigation
+- improved log inspection UX with dedicated log view, selection behavior, and horizontally scrollable detailed payload inspection
+- bumped app version to 0.2.0-alpha16
+
 ## v0.2.0-alpha15
 - fixed command log persistence and query behavior so recent remote execution history is retained more reliably
 - added a system readiness / settings surface for setup blockers and device-state checks

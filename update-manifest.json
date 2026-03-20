@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha15",
-  "version_name": "0.2.0-alpha15",
-  "version_code": 16,
-  "min_supported_version_code": 15,
+  "tag_name": "v0.2.0-alpha16",
+  "version_name": "0.2.0-alpha16",
+  "version_code": 17,
+  "min_supported_version_code": 16,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha15/android-companion-v0.2.0-alpha15.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha15",
-  "notes": "Adds command-log persistence/query fixes plus a system readiness/settings surface so device setup blockers and remote-state diagnostics are easier to inspect before starting remote control."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha16/android-companion-v0.2.0-alpha16.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha16",
+  "notes": "Adds operator-grade remote telemetry, per-command lifecycle phase logs, better in-app log inspection, and a split information architecture with dedicated Home / Connect / Logs / Ops sections."
 }

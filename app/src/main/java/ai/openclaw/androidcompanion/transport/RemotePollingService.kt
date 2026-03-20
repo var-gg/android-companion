@@ -14,7 +14,6 @@ import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.logging.CommandLogStore
 import org.json.JSONObject
-import java.time.Instant
 import kotlin.concurrent.thread
 
 class RemotePollingService : Service() {
@@ -37,6 +36,7 @@ class RemotePollingService : Service() {
         when (intent?.action) {
             ACTION_STOP -> {
                 running = false
+                uiStateStore.markServiceRunning(false, "Remote polling stopped")
                 uiStateStore.set(RemoteUiStateStore.STATUS_DISCONNECTED, "Remote polling stopped")
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
@@ -50,11 +50,12 @@ class RemotePollingService : Service() {
     private fun startPollingLoop() {
         if (running) return
         running = true
+        uiStateStore.markServiceRunning(true, "Remote polling service running")
         uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Remote polling active")
         startForeground(NOTIFICATION_ID, buildNotification("Remote polling active"))
 
         thread(name = "remote-polling-loop") {
-            var registeredThisRun = false
+            var registeredDeviceId: String? = null
             while (running) {
                 val config = configStore.load()
                 if (config.baseUrl.isBlank()) {
@@ -63,125 +64,128 @@ class RemotePollingService : Service() {
                     Thread.sleep(5000)
                     continue
                 }
+
+                uiStateStore.markPollStarted("Polling ${config.baseUrl}")
                 try {
                     val client = RemoteTransportClient(config)
-                    if (!registeredThisRun) {
+                    if (registeredDeviceId != config.deviceId) {
                         client.registerDevice(engine.execute(CommandEnvelope("device_info", JSONObject(), null)))
-                        registeredThisRun = true
+                        registeredDeviceId = config.deviceId
                         uiStateStore.set(RemoteUiStateStore.STATUS_REGISTERED, "Registered ${config.deviceId}")
-                        updateNotification("Registered ${config.deviceId}")
                     }
+
                     client.postHeartbeat(
                         JSONObject()
-                            .put("timestamp", Instant.now().toString())
                             .put("status", "online")
+                            .put("app_version", ai.openclaw.androidcompanion.BuildConfig.VERSION_NAME)
                     )
-                    uiStateStore.markPoll()
+                    uiStateStore.markHeartbeat("Heartbeat delivered")
+
                     val response = client.fetchNextCommand()
                     val command = RemoteTransportClient.parseCommand(response)
                     val commandId = RemoteTransportClient.parseCommandId(response)
                     if (command != null && commandId != null) {
-                        uiStateStore.markCommandReceived(
-                            action = command.action,
-                            commandId = commandId,
-                            detail = "Received ${command.action}"
-                        )
-                        val logId = logStore.append(
-                            baseLogEntry(
-                                action = command.action,
-                                requestId = command.requestId,
-                                command = command,
-                                state = "received"
-                            )
-                                .put("source", "remote_service")
-                                .put("remote_command_id", commandId)
-                                .put("poll_response", JSONObject(response.toString()))
-                        ).optString("log_id")
-                        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Executing ${command.action}")
+                        val commandJson = JSONObject()
+                            .put("action", command.action)
+                            .put("params", JSONObject(command.params.toString()))
+                            .apply { command.requestId?.let { put("request_id", it) } }
+                        val log = logStore.createRemoteLog(commandId, commandJson, command.action, command.requestId)
+                        val logId = log.optString("log_id")
+                        uiStateStore.markCommandFetched(command.action, commandId, "Fetched ${command.action}")
+                        logStore.markPhase(logId, CommandLogStore.PHASE_DELIVERED, CommandLogStore.STATE_DELIVERED, "Command delivered to executor", true)
+                        uiStateStore.markCommandDelivered(command.action, commandId, "Delivered ${command.action} to executor")
                         updateNotification("Executing ${command.action}")
-                        logStore.update(logId) { existing ->
-                            existing
-                                .put("state", "started")
-                                .put("started_at", Instant.now().toString())
-                        }
-                        val result = runCatching { engine.execute(command) }
-                        result.onSuccess { executionResult ->
+                        logStore.markPhase(logId, CommandLogStore.PHASE_EXECUTING, CommandLogStore.STATE_EXECUTING, "Executor running", true)
+
+                        val execution = runCatching { engine.execute(command) }
+                        execution.onSuccess { executionResult ->
+                            val executionOk = executionResult.optBoolean("ok", false)
+                            logStore.attachResult(logId, executionResult, executionOk)
+                            logStore.markPhase(
+                                logId,
+                                CommandLogStore.PHASE_EXECUTED,
+                                CommandLogStore.STATE_EXECUTED,
+                                detail = if (executionOk) "Execution finished" else "Execution returned failure",
+                                ok = executionOk,
+                                payload = executionResult
+                            )
+                            uiStateStore.markCommandExecuted(command.action, commandId, "Executed ${command.action}")
+
                             val upload = runCatching { client.uploadResult(commandId, executionResult) }
                             upload.onSuccess { uploadResult ->
-                                logStore.update(logId) { existing ->
-                                    existing
-                                        .put("state", if (executionResult.optBoolean("ok", false)) "finished" else "failed")
-                                        .put("ok", executionResult.optBoolean("ok", false))
-                                        .put("finished_at", Instant.now().toString())
-                                        .put("result", JSONObject(executionResult.toString()))
-                                        .put("upload_result", JSONObject(uploadResult.toString()))
-                                }
-                                uiStateStore.markResultUpload("Last command: ${command.action}")
-                                uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Last command: ${command.action}")
-                                updateNotification("Last command: ${command.action}")
-                            }.onFailure { uploadError ->
-                                logStore.update(logId) { existing ->
-                                    existing
-                                        .put("state", "upload_failed")
-                                        .put("ok", executionResult.optBoolean("ok", false))
-                                        .put("finished_at", Instant.now().toString())
-                                        .put("result", JSONObject(executionResult.toString()))
-                                        .put("upload_error", uploadError.message ?: uploadError.javaClass.simpleName)
-                                }
-                                uiStateStore.set(
-                                    RemoteUiStateStore.STATUS_ERROR,
-                                    "Upload failed for ${command.action}: ${uploadError.message ?: uploadError.javaClass.simpleName}"
+                                logStore.attachUploadResult(logId, uploadResult)
+                                logStore.markPhase(
+                                    logId,
+                                    CommandLogStore.PHASE_UPLOADED,
+                                    CommandLogStore.STATE_UPLOADED,
+                                    detail = "Result uploaded to bridge",
+                                    ok = true,
+                                    payload = uploadResult
                                 )
+                                uiStateStore.markCommandUploaded(command.action, commandId, "Uploaded ${command.action} result")
+                                uiStateStore.markPollSucceeded("Last uploaded command: ${command.action}")
+                                updateNotification("Uploaded ${command.action}")
+                            }.onFailure { uploadError ->
+                                val reason = uploadError.message ?: uploadError.javaClass.simpleName
+                                logStore.markPhase(
+                                    logId,
+                                    CommandLogStore.PHASE_FAILED,
+                                    CommandLogStore.STATE_FAILED,
+                                    detail = "Upload failed",
+                                    ok = false,
+                                    errorCategory = "upload",
+                                    errorReason = reason
+                                )
+                                uiStateStore.markError("upload", reason, "Upload failed for ${command.action}")
                                 updateNotification("Upload failed: ${command.action}")
                             }
                         }.onFailure { executionError ->
-                            logStore.update(logId) { existing ->
-                                existing
-                                    .put("state", "failed")
-                                    .put("ok", false)
-                                    .put("finished_at", Instant.now().toString())
-                                    .put("error", executionError.message ?: executionError.javaClass.simpleName)
-                            }
-                            uiStateStore.set(
-                                RemoteUiStateStore.STATUS_ERROR,
-                                "Execution failed for ${command.action}: ${executionError.message ?: executionError.javaClass.simpleName}"
+                            val reason = executionError.message ?: executionError.javaClass.simpleName
+                            logStore.markPhase(
+                                logId,
+                                CommandLogStore.PHASE_FAILED,
+                                CommandLogStore.STATE_FAILED,
+                                detail = "Execution failed",
+                                ok = false,
+                                errorCategory = "execution",
+                                errorReason = reason
                             )
+                            uiStateStore.markError("execution", reason, "Execution failed for ${command.action}")
                             updateNotification("Execution failed: ${command.action}")
                         }
                     } else {
-                        uiStateStore.set(RemoteUiStateStore.STATUS_POLLING, "Remote polling active")
+                        uiStateStore.markPollSucceeded("No command waiting")
                         updateNotification("Remote polling active")
                     }
                 } catch (e: Exception) {
+                    val reason = e.message ?: e.javaClass.simpleName
                     logStore.append(
                         JSONObject()
-                            .put("timestamp", Instant.now().toString())
                             .put("source", "remote_service")
-                            .put("state", "failed")
+                            .put("state", CommandLogStore.STATE_FAILED)
+                            .put("phase", CommandLogStore.PHASE_FAILED)
                             .put("ok", false)
-                            .put("error", e.message ?: e.javaClass.simpleName)
+                            .put("error_category", "transport")
+                            .put("error_reason", reason)
+                            .put("detail", "Polling loop failed")
+                            .put(
+                                "phases",
+                                org.json.JSONArray().put(
+                                    JSONObject()
+                                        .put("phase", CommandLogStore.PHASE_FAILED)
+                                        .put("detail", "Polling loop failed")
+                                        .put("error_category", "transport")
+                                        .put("error_reason", reason)
+                                )
+                            )
                     )
-                    uiStateStore.set(RemoteUiStateStore.STATUS_ERROR, e.message ?: e.javaClass.simpleName)
+                    uiStateStore.markError("transport", reason, reason)
                     updateNotification("Remote error: ${e.javaClass.simpleName}")
                 }
                 val delayMs = config.pollIntervalSeconds.coerceAtLeast(10L) * 1000L
                 Thread.sleep(delayMs)
             }
         }
-    }
-
-    private fun baseLogEntry(
-        action: String,
-        requestId: String?,
-        command: CommandEnvelope,
-        state: String
-    ): JSONObject {
-        return JSONObject()
-            .put("timestamp", Instant.now().toString())
-            .put("action", action)
-            .put("request_id", requestId)
-            .put("state", state)
-            .put("command", JSONObject().put("action", command.action).put("params", JSONObject(command.params.toString())).apply { command.requestId?.let { put("request_id", it) } })
     }
 
     private fun buildNotification(text: String): Notification {
