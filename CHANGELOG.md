@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0-alpha19
+- upgraded the Logs tab into a live operator/debug surface with explicit auto-refresh status, clearer browsing, and stronger row/detail separation
+- expanded selected-log detail output with execution path, phase timeline, last payload snapshot, stored result, and upload result sections
+- added replay helpers to load stored commands back into Ops, replay stored payloads, and force `open_intent` replays through direct / notify / ACTION_VIEW flows for debugging
+- kept thin-runtime boundaries intact while making remote/manual/notification-mediated execution distinctions easier to inspect from the device UI
+- bumped app version to 0.2.0-alpha19
+
 ## v0.2.0-alpha18
 - replaced the notification tap broadcast path with a dedicated transparent intent proxy activity so notification-mediated `open_intent` launches transition more directly into the target app with less visible companion UI flash
 - added explicit notification tap / launch-attempted / launch-succeeded-or-failed telemetry markers for the proxy-based execution path

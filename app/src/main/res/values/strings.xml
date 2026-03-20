@@ -101,15 +101,27 @@
     <string name="result_section_title">Result</string>
     <string name="result_section_desc">Structured JSON output from the last command.</string>
     <string name="logs_section_title">Recent command logs</string>
-    <string name="logs_section_desc">Recent command history for quick inspection.</string>
+    <string name="logs_section_desc">Logs auto-refresh while this screen is visible. Newest entries appear first; tap a row to inspect stored command payloads, results, upload state, and replay options.</string>
     <string name="clear_logs">Clear logs</string>
-    <string name="rerun_log">Re-run selected</string>
+    <string name="rerun_log">Replay stored</string>
     <string name="logs_empty">No command logs yet.</string>
-    <string name="log_detail_title">Selected log detail</string>
+    <string name="log_detail_title">Selected log trace</string>
     <string name="log_detail_empty">Select a command log to inspect it.</string>
+    <string name="refresh_logs">Refresh logs</string>
+    <string name="load_log_to_editor">Load to Ops</string>
+    <string name="replay_direct">Replay direct</string>
+    <string name="replay_notify">Replay notify</string>
+    <string name="replay_view">Replay as VIEW</string>
+    <string name="log_list_title">Stored log list</string>
+    <string name="log_summary_empty">stored_logs: 0
+auto_refresh: active while app is visible
+last_refresh: -
+selected_log: -</string>
+    <string name="status_log_loaded_to_editor">Loaded %1$s into the Ops JSON editor.</string>
+    <string name="status_replay_not_supported">Selected log cannot use replay mode %1$s.</string>
     <string name="status_logs_cleared">Command logs cleared</string>
     <string name="status_log_missing_command">This log entry does not contain a stored command payload.</string>
-    <string name="status_rerunning_log">Re-running %1$s from stored log payload.</string>
+    <string name="status_rerunning_log">Replaying %1$s from stored log payload (%2$s).</string>
     <string name="status_remote_config_saved">Remote config saved</string>
     <string name="status_remote_started">Remote polling service started</string>
     <string name="status_remote_stopped">Remote polling service stopped</string>

@@ -3,6 +3,7 @@ package ai.openclaw.androidcompanion
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.Intent as AndroidIntent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var suppressLanguageChange = false
     private var selectedLogId: String? = null
     private var currentSection = SECTION_HOME
+    private var lastLogsRefreshAt: Instant? = null
 
     private val logPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> runOnUiThread { renderRecentCommands() } }
     private val remoteStatePrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> runOnUiThread { renderConnectionStatus() } }
@@ -159,8 +161,13 @@ class MainActivity : AppCompatActivity() {
         binding.importPairingCodeButton.setOnClickListener { importPairingFromField() }
         binding.testRemoteConnectionButton.setOnClickListener { saveRemoteConfig(); testRemoteConnection() }
         binding.saveRemoteConfigButton.setOnClickListener { saveRemoteConfig(); renderStatus(getString(R.string.status_remote_config_saved)) }
-        binding.clearLogsButton.setOnClickListener { commandLogStore.clear(); selectedLogId = null; renderRecentCommands(); renderStatus(getString(R.string.status_logs_cleared)) }
+        binding.refreshLogsButton.setOnClickListener { renderRecentCommands(manualRefresh = true) }
+        binding.clearLogsButton.setOnClickListener { commandLogStore.clear(); selectedLogId = null; renderRecentCommands(manualRefresh = true); renderStatus(getString(R.string.status_logs_cleared)) }
+        binding.loadLogToEditorButton.setOnClickListener { loadSelectedLogToEditor() }
         binding.rerunLogButton.setOnClickListener { rerunSelectedLog() }
+        binding.replayDirectButton.setOnClickListener { replaySelectedLog(ReplayMode.DIRECT) }
+        binding.replayNotifyButton.setOnClickListener { replaySelectedLog(ReplayMode.NOTIFY) }
+        binding.replayViewButton.setOnClickListener { replaySelectedLog(ReplayMode.VIEW) }
         binding.startRemoteButton.setOnClickListener { if (!isBlockedBySoftForceUpdate()) { saveRemoteConfig(); RemotePollingService.start(this); renderStatus(getString(R.string.status_remote_started)); renderConnectionStatus() } }
         binding.stopRemoteButton.setOnClickListener { RemotePollingService.stop(this); renderStatus(getString(R.string.status_remote_stopped)); renderConnectionStatus() }
         binding.registerRemoteButton.setOnClickListener { if (!isBlockedBySoftForceUpdate()) { saveRemoteConfig(); registerDeviceNow() } }
@@ -297,13 +304,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderRecentCommands() {
+    private fun renderRecentCommands(manualRefresh: Boolean = false) {
+        lastLogsRefreshAt = Instant.now()
         val logs = commandLogStore.readAll()
         binding.recentLogsList.removeAllViews()
         if (logs.length() == 0) {
             binding.recentLogsList.addView(TextView(this).apply { text = getString(R.string.logs_empty); setPadding(16, 16, 16, 16) })
+            binding.logSummaryOutput.text = getString(R.string.log_summary_empty)
             binding.logDetailOutput.text = getString(R.string.log_detail_empty)
-            binding.rerunLogButton.isEnabled = false
+            setReplayButtonsEnabled(false, false)
             selectedLogId = null
             return
         }
@@ -313,30 +322,42 @@ class MainActivity : AppCompatActivity() {
             val entry = logs.optJSONObject(i) ?: continue
             val isSelected = i == resolvedIndex
             binding.recentLogsList.addView(TextView(this).apply {
-                text = formatLogRow(entry, isSelected)
+                text = formatLogRow(entry, isSelected, i)
                 setPadding(20, 16, 20, 16)
                 setBackgroundResource(if (isSelected) R.drawable.log_row_selected_background else R.drawable.log_row_background)
                 setTypeface(typeface, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
                 setOnClickListener { selectedLogId = entry.optString("log_id"); renderRecentCommands() }
             })
         }
-        renderLogDetail(logs.optJSONObject(resolvedIndex))
+        val selectedEntry = logs.optJSONObject(resolvedIndex)
+        binding.logSummaryOutput.text = buildLogSummary(logs, resolvedIndex, selectedEntry, manualRefresh)
+        renderLogDetail(selectedEntry)
     }
 
-    private fun formatLogRow(entry: JSONObject, selected: Boolean): String {
+    private fun formatLogRow(entry: JSONObject, selected: Boolean, index: Int): String {
         val phases = entry.optJSONArray("phases")?.let { summarizePhases(it) }.orEmpty()
         return buildString {
             append(if (selected) "SELECTED" else "LOG")
+            append(" #")
+            append(index + 1)
             append("  ")
             append(entry.optString("action", "unknown"))
+            append("\nstarted=")
+            append(entry.optString("started_at").ifBlank { entry.optString("timestamp") })
             append("\nstate=")
             append(entry.optString("state"))
             append("  source=")
             append(entry.optString("source"))
+            append("  path=")
+            append(inferExecutionPath(entry))
             append("\ncommand_id=")
             append(entry.optString("remote_command_id").ifBlank { "-" })
             append("  request_id=")
             append(entry.optString("request_id").ifBlank { "-" })
+            entry.optString("detail").takeIf { it.isNotBlank() }?.let {
+                append("\ndetail=")
+                append(it)
+            }
             if (phases.isNotBlank()) {
                 append("\nphases=")
                 append(phases)
@@ -346,31 +367,147 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderLogDetail(entry: JSONObject?) {
         if (entry == null) {
+            binding.logSummaryOutput.text = getString(R.string.log_summary_empty)
             binding.logDetailOutput.text = getString(R.string.log_detail_empty)
-            binding.rerunLogButton.isEnabled = false
+            setReplayButtonsEnabled(false, false)
             return
         }
+        val command = entry.optJSONObject("command")
+        val supportsIntentReplay = command?.optString("action") == "open_intent"
         val lines = mutableListOf(
+            "log_id: ${entry.optString("log_id")}",
             "timestamp: ${entry.optString("timestamp")}",
+            "started_at: ${entry.optString("started_at").ifBlank { "-" }}",
+            "finished_at: ${entry.optString("finished_at").ifBlank { "-" }}",
             "source: ${entry.optString("source")}",
+            "execution_path: ${inferExecutionPath(entry)}",
             "state: ${entry.optString("state")}",
             "phase: ${entry.optString("phase")}",
             "action: ${entry.optString("action")}",
-            "request_id: ${entry.optString("request_id")}",
+            "request_id: ${entry.optString("request_id").ifBlank { "-" }}",
             "remote_command_id: ${entry.optString("remote_command_id").ifBlank { "-" }}",
+            "detail: ${entry.optString("detail").ifBlank { "-" }}",
             "error_category: ${entry.optString("error_category").ifBlank { "-" }}",
             "error_reason: ${entry.optString("error_reason").ifBlank { "-" }}"
         )
-        entry.optJSONArray("phases")?.let {
+        entry.optJSONObject("last_payload")?.let { lines += ""; lines += "last_payload:"; lines += it.toString(2) }
+        entry.optJSONArray("phases")?.let { phases ->
             lines += ""
-            lines += "phases:"
-            lines += it.toString(2)
+            lines += "phase_timeline:"
+            for (i in 0 until phases.length()) {
+                val phase = phases.optJSONObject(i) ?: continue
+                lines += "- ${phase.optString("timestamp")}  ${phase.optString("phase")}  ok=${phase.opt("ok") ?: "-"}  detail=${phase.optString("detail").ifBlank { "-" }}"
+                phase.optString("error_reason").takeIf { it.isNotBlank() }?.let { lines += "  error_reason: $it" }
+                phase.optJSONObject("payload")?.let { lines += "  payload: ${it.toString()}" }
+            }
         }
-        entry.optJSONObject("command")?.let { lines += ""; lines += "command:"; lines += it.toString(2) }
+        command?.let { lines += ""; lines += "command:"; lines += it.toString(2) }
         entry.optJSONObject("result")?.let { lines += ""; lines += "result:"; lines += it.toString(2) }
         entry.optJSONObject("upload_result")?.let { lines += ""; lines += "upload_result:"; lines += it.toString(2) }
         binding.logDetailOutput.text = lines.joinToString("\n")
-        binding.rerunLogButton.isEnabled = entry.optJSONObject("command") != null
+        setReplayButtonsEnabled(command != null, supportsIntentReplay)
+    }
+
+    private fun buildLogSummary(logs: JSONArray, resolvedIndex: Int, selectedEntry: JSONObject?, manualRefresh: Boolean): String {
+        val selectedLabel = selectedEntry?.optString("log_id")?.ifBlank { "-" } ?: "-"
+        return buildString {
+            appendLine("stored_logs: ${logs.length()} / ${CommandLogStore.MAX_ITEMS}")
+            appendLine("auto_refresh: active while app is visible")
+            appendLine("refresh_reason: ${if (manualRefresh) "manual_button" else "ui_or_log_change"}")
+            appendLine("last_refresh: ${lastLogsRefreshAt?.toString() ?: "-"}")
+            appendLine("selected_index: ${resolvedIndex + 1}")
+            append("selected_log: $selectedLabel")
+        }
+    }
+
+    private fun inferExecutionPath(entry: JSONObject): String {
+        val phases = entry.optJSONArray("phases") ?: JSONArray()
+        var sawNotification = false
+        var sawTap = false
+        for (i in 0 until phases.length()) {
+            val phase = phases.optJSONObject(i)?.optString("phase").orEmpty()
+            if (phase.contains("notification")) sawNotification = true
+            if (phase.contains("tapped") || phase.contains("launch_attempted")) sawTap = true
+        }
+        return when {
+            sawNotification && sawTap -> "notification_tap_proxy"
+            sawNotification -> "notification_pending"
+            entry.optString("source") == "manual_ui" -> "manual_ui"
+            entry.optString("source") == "remote_service" -> "remote_service"
+            else -> "standard"
+        }
+    }
+
+    private fun selectedLogEntry(): JSONObject? {
+        val selectedId = selectedLogId ?: return null
+        val all = commandLogStore.readAll()
+        for (i in 0 until all.length()) {
+            val entry = all.optJSONObject(i) ?: continue
+            if (entry.optString("log_id") == selectedId) return entry
+        }
+        return null
+    }
+
+    private fun setReplayButtonsEnabled(hasCommand: Boolean, supportsIntentReplay: Boolean) {
+        binding.loadLogToEditorButton.isEnabled = hasCommand
+        binding.rerunLogButton.isEnabled = hasCommand
+        binding.replayDirectButton.isEnabled = supportsIntentReplay
+        binding.replayNotifyButton.isEnabled = supportsIntentReplay
+        binding.replayViewButton.isEnabled = supportsIntentReplay
+    }
+
+    private fun loadSelectedLogToEditor() {
+        val command = selectedLogEntry()?.optJSONObject("command")
+        if (command == null) {
+            renderStatus(getString(R.string.status_log_missing_command))
+            return
+        }
+        binding.commandInput.setText(command.toString(2))
+        showSection(SECTION_OPS)
+        renderStatus(getString(R.string.status_log_loaded_to_editor, command.optString("action", "command")))
+    }
+
+    private fun replaySelectedLog(mode: ReplayMode? = null) {
+        val command = selectedLogEntry()?.optJSONObject("command")
+        if (command == null) {
+            renderStatus(getString(R.string.status_log_missing_command))
+            return
+        }
+        val replayCommand = when (mode) {
+            null -> JSONObject(command.toString())
+            ReplayMode.DIRECT -> buildReplayCommand(command, "direct")
+            ReplayMode.NOTIFY -> buildReplayCommand(command, "notify")
+            ReplayMode.VIEW -> buildReplayViewCommand(command)
+        }
+        if (replayCommand == null) {
+            renderStatus(getString(R.string.status_replay_not_supported, mode?.label ?: "stored"))
+            return
+        }
+        binding.commandInput.setText(replayCommand.toString(2))
+        showSection(SECTION_OPS)
+        renderStatus(getString(R.string.status_rerunning_log, replayCommand.optString("action", "command"), mode?.label ?: "stored"))
+        executeCommandJson(replayCommand)
+    }
+
+    private fun buildReplayCommand(command: JSONObject, deliveryPolicy: String): JSONObject? {
+        if (command.optString("action") != "open_intent") return null
+        val replay = JSONObject(command.toString())
+        val params = JSONObject(replay.optJSONObject("params")?.toString() ?: "{}")
+        params.put("delivery_policy", deliveryPolicy)
+        replay.put("params", params)
+        return replay
+    }
+
+    private fun buildReplayViewCommand(command: JSONObject): JSONObject? {
+        if (command.optString("action") != "open_intent") return null
+        val replay = JSONObject(command.toString())
+        val params = JSONObject(replay.optJSONObject("params")?.toString() ?: "{}")
+        val data = listOf("uri", "data", "url").firstNotNullOfOrNull { key -> params.optString(key).takeIf { it.isNotBlank() } } ?: return null
+        params.put("action", AndroidIntent.ACTION_VIEW)
+        params.put("uri", data)
+        if (params.optString("delivery_policy").isBlank()) params.put("delivery_policy", "auto")
+        replay.put("params", params)
+        return replay
     }
 
     private fun summarizePhases(phases: JSONArray): String {
@@ -553,15 +690,7 @@ class MainActivity : AppCompatActivity() {
         return 0
     }
 
-    private fun rerunSelectedLog() {
-        val selectedId = selectedLogId ?: return
-        val command = commandLogStore.readAll().let { all -> (0 until all.length()).mapNotNull { all.optJSONObject(it) }.firstOrNull { it.optString("log_id") == selectedId } }?.optJSONObject("command")
-        if (command == null) { renderStatus(getString(R.string.status_log_missing_command)); return }
-        binding.commandInput.setText(command.toString(2))
-        showSection(SECTION_OPS)
-        renderStatus(getString(R.string.status_rerunning_log, command.optString("action", "command")))
-        executeCommandJson(JSONObject(command.toString()))
-    }
+    private fun rerunSelectedLog() { replaySelectedLog() }
 
     private fun renderResult(result: JSONObject) { binding.resultOutput.text = result.toString(2) }
     private fun renderStatus(status: String) { binding.statusMessageOutput.text = status }
@@ -581,5 +710,11 @@ class MainActivity : AppCompatActivity() {
         private const val SECTION_CONNECT = "connect"
         private const val SECTION_LOGS = "logs"
         private const val SECTION_OPS = "ops"
+    }
+
+    private enum class ReplayMode(val label: String) {
+        DIRECT("direct"),
+        NOTIFY("notify"),
+        VIEW("view")
     }
 }
