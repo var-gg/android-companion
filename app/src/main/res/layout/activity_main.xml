@@ -514,22 +514,16 @@
                 android:text="@string/log_list_title"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
-            <ScrollView
-                android:id="@+id/recentLogsScroll"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recentLogsRecycler"
                 android:layout_width="match_parent"
                 android:layout_height="260dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/result_background"
-                android:fillViewport="true"
-                android:scrollbars="vertical">
-
-                <LinearLayout
-                    android:id="@+id/recentLogsList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="8dp" />
-            </ScrollView>
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="true"
+                android:padding="8dp"
+                android:scrollbars="vertical" />
 
             <TextView
                 android:layout_width="wrap_content"

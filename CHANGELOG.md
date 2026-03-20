@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.2.0-alpha21
+- replaced the Logs tab stored-log list's nested ScrollView + LinearLayout stack with a fixed-height RecyclerView so the list owns a real bounded inner scroll region
+- kept the selected log detail panel below the list instead of letting long stored-log content expand the whole page and shove detail further down
+- removed the fragile touch-intercept handoff workaround in favor of standard Android list scrolling behavior
+- bumped app version to 0.2.0-alpha21
+
 ## v0.2.0-alpha20
 - fixed the Logs tab's stored-log panel touch handoff so the inner log list can be scrolled directly without page scroll stealing the gesture
 - expanded NAVER Map route/public findings so the catalog now records the documented route-family surface separately from unverified initial transit/subway tab control

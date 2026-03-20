@@ -12,11 +12,14 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.MotionEvent
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import ai.openclaw.androidcompanion.capabilities.AndroidCapabilityEngine
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.databinding.ActivityMainBinding
@@ -56,6 +59,12 @@ class MainActivity : AppCompatActivity() {
     private var selectedLogId: String? = null
     private var currentSection = SECTION_HOME
     private var lastLogsRefreshAt: Instant? = null
+    private val recentLogsAdapter = RecentLogsAdapter(
+        onLogSelected = { logId ->
+            selectedLogId = logId
+            renderRecentCommands()
+        }
+    )
 
     private val logPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> runOnUiThread { renderRecentCommands() } }
     private val remoteStatePrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> runOnUiThread { renderConnectionStatus() } }
@@ -90,7 +99,7 @@ class MainActivity : AppCompatActivity() {
         remoteUiStateStore = RemoteUiStateStore(this)
 
         setupSections()
-        setupNestedScrollHandoff()
+        setupRecentLogsList()
         setupLanguageControls()
         setupPermissionControls()
         setupButtons()
@@ -134,14 +143,12 @@ class MainActivity : AppCompatActivity() {
         binding.navOpsButton.setOnClickListener { showSection(SECTION_OPS) }
     }
 
-    private fun setupNestedScrollHandoff() {
-        binding.recentLogsScroll.setOnTouchListener { view, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> view.parent?.requestDisallowInterceptTouchEvent(true)
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> view.parent?.requestDisallowInterceptTouchEvent(false)
-            }
-            false
-        }
+    private fun setupRecentLogsList() {
+        binding.recentLogsRecycler.layoutManager = LinearLayoutManager(this)
+        binding.recentLogsRecycler.adapter = recentLogsAdapter
+        binding.recentLogsRecycler.setHasFixedSize(false)
+        binding.recentLogsRecycler.isNestedScrollingEnabled = true
+        binding.recentLogsRecycler.overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
     }
 
     private fun showSection(section: String) {
@@ -319,9 +326,8 @@ class MainActivity : AppCompatActivity() {
     private fun renderRecentCommands(manualRefresh: Boolean = false) {
         lastLogsRefreshAt = Instant.now()
         val logs = commandLogStore.readAll()
-        binding.recentLogsList.removeAllViews()
         if (logs.length() == 0) {
-            binding.recentLogsList.addView(TextView(this).apply { text = getString(R.string.logs_empty); setPadding(16, 16, 16, 16) })
+            recentLogsAdapter.submitList(emptyList(), selectedLogId = null)
             binding.logSummaryOutput.text = getString(R.string.log_summary_empty)
             binding.logDetailOutput.text = getString(R.string.log_detail_empty)
             setReplayButtonsEnabled(false, false)
@@ -330,26 +336,25 @@ class MainActivity : AppCompatActivity() {
         }
         val resolvedIndex = findSelectedLogIndex(logs)
         selectedLogId = logs.optJSONObject(resolvedIndex)?.optString("log_id")
-        for (i in 0 until logs.length()) {
-            val entry = logs.optJSONObject(i) ?: continue
-            val isSelected = i == resolvedIndex
-            binding.recentLogsList.addView(TextView(this).apply {
-                text = formatLogRow(entry, isSelected, i)
-                setPadding(20, 16, 20, 16)
-                setBackgroundResource(if (isSelected) R.drawable.log_row_selected_background else R.drawable.log_row_background)
-                setTypeface(typeface, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
-                setOnClickListener { selectedLogId = entry.optString("log_id"); renderRecentCommands() }
-            })
+        val rows = buildList {
+            for (i in 0 until logs.length()) {
+                val entry = logs.optJSONObject(i) ?: continue
+                add(LogRowModel(entry = entry, displayText = formatLogRow(entry, i), isSelected = i == resolvedIndex))
+            }
+        }
+        recentLogsAdapter.submitList(rows, selectedLogId)
+        binding.recentLogsRecycler.post {
+            if (resolvedIndex in rows.indices) binding.recentLogsRecycler.scrollToPosition(resolvedIndex)
         }
         val selectedEntry = logs.optJSONObject(resolvedIndex)
         binding.logSummaryOutput.text = buildLogSummary(logs, resolvedIndex, selectedEntry, manualRefresh)
         renderLogDetail(selectedEntry)
     }
 
-    private fun formatLogRow(entry: JSONObject, selected: Boolean, index: Int): String {
+    private fun formatLogRow(entry: JSONObject, index: Int): String {
         val phases = entry.optJSONArray("phases")?.let { summarizePhases(it) }.orEmpty()
         return buildString {
-            append(if (selected) "SELECTED" else "LOG")
+            append("LOG")
             append(" #")
             append(index + 1)
             append("  ")
@@ -714,6 +719,52 @@ class MainActivity : AppCompatActivity() {
     private fun sampleHealthPing() = """{\n  \"action\": \"health_ping\",\n  \"params\": {}\n}"""
     private fun sampleListApps() = """{\n  \"action\": \"list_installed_apps\",\n  \"params\": {\n    \"include_system\": false\n  }\n}"""
     private fun sampleSelfUpdateCheck() = """{\n  \"action\": \"check_self_update\",\n  \"params\": {\n    \"manifest_url\": \"https://raw.githubusercontent.com/var-gg/android-companion/main/update-manifest.json\"\n  }\n}"""
+
+    private data class LogRowModel(
+        val entry: JSONObject,
+        val displayText: String,
+        val isSelected: Boolean
+    )
+
+    private inner class RecentLogsAdapter(
+        private val onLogSelected: (String) -> Unit
+    ) : RecyclerView.Adapter<RecentLogsAdapter.LogRowViewHolder>() {
+        private val items = mutableListOf<LogRowModel>()
+        private var selectedLogId: String? = null
+
+        fun submitList(rows: List<LogRowModel>, selectedLogId: String?) {
+            this.selectedLogId = selectedLogId
+            items.clear()
+            items.addAll(rows)
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogRowViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_log_row, parent, false) as TextView
+            return LogRowViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: LogRowViewHolder, position: Int) {
+            holder.bind(items[position])
+        }
+
+        override fun getItemCount(): Int = items.size
+
+        inner class LogRowViewHolder(
+            private val textView: TextView
+        ) : RecyclerView.ViewHolder(textView) {
+            fun bind(item: LogRowModel) {
+                val isSelected = item.entry.optString("log_id") == selectedLogId || item.isSelected
+                textView.text = item.displayText
+                textView.setBackgroundResource(if (isSelected) R.drawable.log_row_selected_background else R.drawable.log_row_background)
+                textView.setTypeface(textView.typeface, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
+                textView.setOnClickListener {
+                    val logId = item.entry.optString("log_id")
+                    if (logId.isNotBlank()) onLogSelected(logId)
+                }
+            }
+        }
+    }
 
     companion object {
         private const val TAILSCALE_PACKAGE = "com.tailscale.ipn"

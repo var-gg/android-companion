@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha20",
-  "version_name": "0.2.0-alpha20",
-  "version_code": 21,
-  "min_supported_version_code": 20,
+  "tag_name": "v0.2.0-alpha21",
+  "version_name": "0.2.0-alpha21",
+  "version_code": 22,
+  "min_supported_version_code": 21,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha20/android-companion-v0.2.0-alpha20.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha20",
-  "notes": "Fixes the Logs tab stored-log scroll handoff and expands conservative NAVER Map route/public findings without overclaiming transit-tab control."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha21/android-companion-v0.2.0-alpha21.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha21",
+  "notes": "Replaces the Logs tab stored-log nested scroll stack with a bounded RecyclerView so the list scrolls independently and no longer pushes the selected detail panel down the page."
 }
