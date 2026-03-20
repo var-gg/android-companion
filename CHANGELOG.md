@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0-alpha17
+- added notification-mediated `open_intent` delivery via notification tap/actions for background-safe intent execution
+- added `delivery_policy` routing for `open_intent` with `direct | notify | auto`, where `auto` chooses notification delivery when the app is not foreground
+- expanded `open_intent` result fields and command-log trace output to distinguish direct launch, notification posted, tap-required state, and suspected background launch unreliability
+- registered a dedicated intent-launch receiver so notification taps can launch the target intent and append tap/launch telemetry into command logs
+- bumped app version to 0.2.0-alpha17
+
 ## v0.2.0-alpha16
 - added operator-grade remote lifecycle telemetry for service state, polls, heartbeats, command fetch/deliver/execute/upload milestones, and categorized last-error reporting
 - refactored command log storage to persist per-command lifecycle phases and transport/execution/upload failures for later inspection

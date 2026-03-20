@@ -1,7 +1,11 @@
 package ai.openclaw.androidcompanion.capabilities
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.app.AppOpsManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -15,7 +19,10 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import ai.openclaw.androidcompanion.R
 import ai.openclaw.androidcompanion.contract.CommandEnvelope
 import ai.openclaw.androidcompanion.logging.CommandLogStore
 import ai.openclaw.androidcompanion.settings.PermissionStatus
@@ -30,6 +37,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Instant
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 class AndroidCapabilityEngine(
     private val context: Context
@@ -302,6 +310,7 @@ class AndroidCapabilityEngine(
         val className = command.params.optString("class", "")
         val extrasObject = command.params.optJSONObject("extras") ?: JSONObject()
         val resolveOnly = command.action == "test_intent" || command.params.optBoolean("resolve_only", false)
+        val requestedPolicy = command.params.optString("delivery_policy", "auto").ifBlank { "auto" }.lowercase(Locale.US)
 
         val intent = Intent(action)
         if (data.isNotBlank()) intent.data = Uri.parse(data)
@@ -325,40 +334,169 @@ class AndroidCapabilityEngine(
         val matches = queryIntentActivitiesCompat(intent)
         val resolved = resolveActivityCompat(intent)
         val packageInstalled = packageName.isBlank() || isPackageInstalled(packageName)
+        val canResolve = resolved != null || matches.length() > 0
+        val executionContext = executionContextLabel()
+        val appForeground = context is Activity
+        val directLaunchReliability = if (appForeground) "foreground_expected" else "background_unreliable"
+        val normalizedPolicy = when (requestedPolicy) {
+            "direct", "notify", "auto" -> requestedPolicy
+            else -> "auto"
+        }
+        val effectivePolicy = when (normalizedPolicy) {
+            "direct" -> "direct"
+            "notify" -> "notify"
+            else -> if (appForeground) "direct" else "notify"
+        }
         val diagnostics = okAction(command)
             .put("intent_action", action)
             .put("data", data)
             .put("package", packageName)
             .put("class", className)
             .put("resolve_only", resolveOnly)
-            .put("execution_context", "activity")
+            .put("execution_context", executionContext)
             .put("package_installed", packageInstalled)
             .put("resolve_activity", resolved?.let { describeResolveInfo(it) } ?: JSONObject.NULL)
             .put("matched_activities_count", matches.length())
             .put("matched_activities", matches)
+            .put("delivery_policy_requested", normalizedPolicy)
+            .put("delivery_policy_effective", effectivePolicy)
+            .put("delivery_channel", if (effectivePolicy == "notify") "notification" else "direct")
+            .put("delivery_status", if (effectivePolicy == "notify") "pending_user_action" else "launched_direct")
+            .put("user_action_required", effectivePolicy == "notify")
+            .put("app_foreground", appForeground)
+            .put("background_launch_reliability", directLaunchReliability)
+            .put("suspected_background_launch_blocked", !appForeground)
+            .put("direct_launch_attempted", false)
+            .put("direct_launch_succeeded", JSONObject.NULL)
+            .put("notification_posted", false)
+            .put("notification_channel", if (effectivePolicy == "notify") NOTIFICATION_CHANNEL_INTENT_DELIVERY else JSONObject.NULL)
+            .put("notification_id", JSONObject.NULL)
 
         if (resolveOnly) {
-            val canResolve = resolved != null || matches.length() > 0
             diagnostics.put("ok", canResolve && packageInstalled)
             if (!packageInstalled) {
                 diagnostics.put("likely_block_reason", "package_not_installed")
             } else if (!canResolve) {
                 diagnostics.put("likely_block_reason", "intent_not_resolved")
-            } else if (command.params.optBoolean("background_launch_expected", false)) {
+            } else if (!appForeground) {
                 diagnostics.put("likely_background_launch_blocked", true)
-                diagnostics.put("likely_background_launch_message", "Intent resolves, but launching from a service/background context may still be blocked by Android background activity launch policy")
+                diagnostics.put("likely_background_launch_message", "Intent resolves, but direct launch from a service/background context is not reliable for visible execution on modern Android")
             }
             return diagnostics
         }
 
-        try {
-            context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
+        if (!packageInstalled) {
             return diagnostics
                 .put("ok", false)
-                .put("error", JSONObject().put("code", "intent_not_resolved").put("message", e.message ?: "No activity resolved"))
+                .put("delivery_status", "package_not_installed")
+                .put("error", JSONObject().put("code", "package_not_installed").put("message", "Target package is not installed"))
         }
-        return diagnostics.put("launched", true)
+        if (!canResolve) {
+            return diagnostics
+                .put("ok", false)
+                .put("delivery_status", "intent_not_resolved")
+                .put("error", JSONObject().put("code", "intent_not_resolved").put("message", "No activity resolved"))
+        }
+
+        return if (effectivePolicy == "notify") {
+            postIntentNotification(command, intent, diagnostics)
+        } else {
+            try {
+                diagnostics.put("direct_launch_attempted", true)
+                context.startActivity(intent)
+                diagnostics
+                    .put("launched", true)
+                    .put("direct_launch_succeeded", true)
+                    .put("delivery_status", "launched_direct")
+                    .put("user_action_required", false)
+            } catch (e: ActivityNotFoundException) {
+                diagnostics
+                    .put("ok", false)
+                    .put("direct_launch_succeeded", false)
+                    .put("delivery_status", "intent_not_resolved")
+                    .put("error", JSONObject().put("code", "intent_not_resolved").put("message", e.message ?: "No activity resolved"))
+            }
+        }
+    }
+
+    private fun postIntentNotification(command: CommandEnvelope, targetIntent: Intent, diagnostics: JSONObject): JSONObject {
+        val notificationsAllowed = notificationsAllowed()
+        if (!notificationsAllowed) {
+            return diagnostics
+                .put("ok", false)
+                .put("notification_posted", false)
+                .put("delivery_status", "notification_permission_required")
+                .put("error", JSONObject()
+                    .put("code", "notification_permission_required")
+                    .put("message", "Notification delivery requested but notifications are not permitted"))
+        }
+
+        ensureIntentDeliveryNotificationChannel()
+        val logId = command.params.optString("log_id").ifBlank { null }
+            ?: command.params.optString("command_log_id").ifBlank { null }
+            ?: command.requestId
+            ?: "intent-${System.currentTimeMillis()}"
+        val notificationId = computeNotificationId(logId)
+        val receiverIntent = Intent(context, IntentLaunchReceiver::class.java).apply {
+            action = IntentLaunchReceiver.ACTION_LAUNCH_INTENT
+            putExtra(IntentLaunchReceiver.EXTRA_TARGET_INTENT, Intent(targetIntent))
+            putExtra(IntentLaunchReceiver.EXTRA_LOG_ID, logId)
+            putExtra(IntentLaunchReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(IntentLaunchReceiver.EXTRA_COMMAND_ACTION, command.action)
+            putExtra(IntentLaunchReceiver.EXTRA_REQUEST_ID, command.requestId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            receiverIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val title = command.params.optString("notification_title").ifBlank { "Android Companion action ready" }
+        val body = command.params.optString("notification_body").ifBlank {
+            val target = diagnostics.optString("intent_action").ifBlank { "intent" }
+            "Tap to open $target"
+        }
+        val actionLabel = command.params.optString("notification_action_label").ifBlank { "Open" }
+        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_INTENT_DELIVERY)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .addAction(0, actionLabel, pendingIntent)
+            .build()
+
+        val manager = ContextCompat.getSystemService(context, NotificationManager::class.java)
+            ?: return diagnostics
+                .put("ok", false)
+                .put("notification_posted", false)
+                .put("delivery_status", "notification_manager_unavailable")
+                .put("error", JSONObject().put("code", "notification_manager_unavailable").put("message", "Notification manager unavailable"))
+
+        manager.notify(notificationId, notification)
+        logStore.markPhase(
+            logId = logId,
+            phase = IntentLaunchReceiver.PHASE_NOTIFICATION_POSTED,
+            state = IntentLaunchReceiver.STATE_ACTION_REQUIRED,
+            detail = "Intent posted to notification for user tap",
+            ok = true,
+            payload = JSONObject()
+                .put("delivery_channel", "notification")
+                .put("notification_id", notificationId)
+                .put("intent_action", diagnostics.optString("intent_action"))
+        )
+
+        return diagnostics
+            .put("notification_posted", true)
+            .put("notification_id", notificationId)
+            .put("delivery_status", "notification_posted")
+            .put("pending_user_action", "tap_notification")
+            .put("tap_to_execute", true)
+            .put("launched", false)
+            .put("notification_permission_available", true)
+            .put("notification_tracking_log_id", logId)
     }
 
     private fun checkSelfUpdate(command: CommandEnvelope): JSONObject {
@@ -468,6 +606,12 @@ class AndroidCapabilityEngine(
             .put("finished_at", entry.optString("finished_at").ifBlank { JSONObject.NULL })
             .put("error", entry.optString("error").ifBlank { JSONObject.NULL })
             .put("upload_error", entry.optString("upload_error").ifBlank { JSONObject.NULL })
+            .put("phase", entry.optString("phase").ifBlank { JSONObject.NULL })
+            .put("detail", entry.optString("detail").ifBlank { JSONObject.NULL })
+            .put("error_category", entry.optString("error_category").ifBlank { JSONObject.NULL })
+            .put("error_reason", entry.optString("error_reason").ifBlank { JSONObject.NULL })
+            .put("last_payload", copyOrNull(entry.optJSONObject("last_payload")))
+            .put("phases", copyOrNull(entry.optJSONArray("phases")))
         if (includeCommand) normalized.put("command", copyOrNull(entry.optJSONObject("command")))
         if (includeResult) normalized.put("result", copyOrNull(entry.optJSONObject("result")))
         if (includeUpload) {
@@ -484,6 +628,7 @@ class AndroidCapabilityEngine(
             .put("request_id", entry.optString("request_id").ifBlank { JSONObject.NULL })
             .put("source", entry.optString("source").ifBlank { entry.optString("mode") })
             .put("state", entry.optString("state"))
+            .put("phase", entry.optString("phase").ifBlank { JSONObject.NULL })
             .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
 
         val timeline = JSONArray()
@@ -496,6 +641,18 @@ class AndroidCapabilityEngine(
             .put("state", entry.optString("state"))
             .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
         )
+        val phases = entry.optJSONArray("phases")
+        if (phases != null) {
+            for (i in 0 until phases.length()) {
+                val phase = phases.optJSONObject(i) ?: continue
+                addTimelineEvent(
+                    timeline,
+                    phase.optString("phase"),
+                    phase.optString("timestamp"),
+                    JSONObject(phase.toString()).apply { remove("phase"); remove("timestamp") }
+                )
+            }
+        }
         trace.put("timeline", timeline)
         trace.put("command", copyOrNull(entry.optJSONObject("command")))
         trace.put("result", copyOrNull(entry.optJSONObject("result")))
@@ -522,12 +679,16 @@ class AndroidCapabilityEngine(
             .put("action", entry.optString("action"))
             .put("request_id", entry.optString("request_id").ifBlank { JSONObject.NULL })
             .put("state", entry.optString("state"))
+            .put("phase", entry.optString("phase").ifBlank { JSONObject.NULL })
             .put("ok", if (entry.has("ok")) entry.optBoolean("ok", false) else JSONObject.NULL)
             .put("timestamp", entry.optString("timestamp"))
             .put("finished_at", entry.optString("finished_at").ifBlank { JSONObject.NULL })
+            .put("detail", entry.optString("detail").ifBlank { JSONObject.NULL })
+            .put("error_category", entry.optString("error_category").ifBlank { JSONObject.NULL })
     }
 
     private fun copyOrNull(obj: JSONObject?): Any = obj?.let { JSONObject(it.toString()) } ?: JSONObject.NULL
+    private fun copyOrNull(array: JSONArray?): Any = array?.let { JSONArray(it.toString()) } ?: JSONObject.NULL
 
     private fun epochToIso(value: Long): Any = if (value > 0L) Instant.ofEpochMilli(value).toString() else JSONObject.NULL
 
@@ -583,6 +744,34 @@ class AndroidCapabilityEngine(
         }.getOrDefault(false)
     }
 
+    private fun notificationsAllowed(): Boolean {
+        val snapshot = PermissionStatus.snapshot(context)
+        return snapshot.notificationPermission && snapshot.notificationsEnabled
+    }
+
+    private fun ensureIntentDeliveryNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = ContextCompat.getSystemService(context, NotificationManager::class.java) ?: return
+        manager.createNotificationChannel(
+            NotificationChannel(
+                NOTIFICATION_CHANNEL_INTENT_DELIVERY,
+                "Android Companion intent delivery",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notification-mediated execution path for open_intent commands"
+            }
+        )
+    }
+
+    private fun executionContextLabel(): String = when (context) {
+        is Activity -> "activity"
+        else -> context.javaClass.simpleName.ifBlank { "context" }.lowercase(Locale.US)
+    }
+
+    private fun computeNotificationId(logId: String): Int {
+        return (logId.hashCode().absoluteValue % 100000) + 2000
+    }
+
     private fun resolveActivityCompat(intent: Intent): ResolveInfo? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.resolveActivity(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
@@ -628,7 +817,10 @@ class AndroidCapabilityEngine(
         .put("request_id", command.requestId)
         .put("error", JSONObject().put("code", code).put("message", message))
         .put("timestamp", Instant.now().toString())
+
 }
+
+private const val NOTIFICATION_CHANNEL_INTENT_DELIVERY = "intent_delivery"
 
 private fun PackageManager.getPackageInfoCompat(packageName: String): PackageInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

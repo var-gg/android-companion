@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha16",
-  "version_name": "0.2.0-alpha16",
-  "version_code": 17,
-  "min_supported_version_code": 16,
+  "tag_name": "v0.2.0-alpha17",
+  "version_name": "0.2.0-alpha17",
+  "version_code": 18,
+  "min_supported_version_code": 17,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha16/android-companion-v0.2.0-alpha16.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha16",
-  "notes": "Adds operator-grade remote telemetry, per-command lifecycle phase logs, better in-app log inspection, and a split information architecture with dedicated Home / Connect / Logs / Ops sections."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha17/android-companion-v0.2.0-alpha17.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha17",
+  "notes": "Adds notification-mediated open_intent delivery, auto/direct/notify routing, and richer direct-vs-notification execution telemetry for background intent handling."
 }

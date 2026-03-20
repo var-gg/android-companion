@@ -173,10 +173,18 @@ Legacy flat v0.1 shape is still accepted for backward compatibility.
   "action": "open_intent",
   "params": {
     "action": "android.settings.APPLICATION_DETAILS_SETTINGS",
-    "uri": "package:com.android.chrome"
+    "uri": "package:com.android.chrome",
+    "delivery_policy": "auto"
   }
 }
 ```
+
+`open_intent` delivery policies:
+- `direct`: attempt an immediate `startActivity()` launch
+- `notify`: post a notification and require a user tap to execute the intent
+- `auto`: choose `direct` when the app is foreground, otherwise `notify`
+
+This matters because modern Android background activity launch policy can let a service call succeed technically while still failing to produce a visible UI transition for the user.
 
 ### Self update check
 ```json
