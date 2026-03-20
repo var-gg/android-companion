@@ -515,6 +515,7 @@
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
             <ScrollView
+                android:id="@+id/recentLogsScroll"
                 android:layout_width="match_parent"
                 android:layout_height="260dp"
                 android:layout_marginTop="8dp"

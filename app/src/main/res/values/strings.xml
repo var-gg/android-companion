@@ -101,7 +101,7 @@
     <string name="result_section_title">Result</string>
     <string name="result_section_desc">Structured JSON output from the last command.</string>
     <string name="logs_section_title">Recent command logs</string>
-    <string name="logs_section_desc">Logs auto-refresh while this screen is visible. Newest entries appear first; tap a row to inspect stored command payloads, results, upload state, and replay options.</string>
+    <string name="logs_section_desc">Logs auto-refresh while this screen is visible. Newest entries appear first; tap a row to inspect stored command payloads, results, upload state, and replay options. The stored log list keeps its own scrollable panel so you can browse long histories without losing your place in the page.</string>
     <string name="clear_logs">Clear logs</string>
     <string name="rerun_log">Replay stored</string>
     <string name="logs_empty">No command logs yet.</string>

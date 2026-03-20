@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- fixed the Logs tab's stored-log panel touch handoff so the inner log list can be scrolled directly without page scroll stealing the gesture
+- recorded NAVER Map route-mode catalog evidence more conservatively: route family is documented by path, but initial visible transit/subway tab selection is not currently guaranteed
+
 ## v0.2.0-alpha19
 - upgraded the Logs tab into a live operator/debug surface with explicit auto-refresh status, clearer browsing, and stronger row/detail separation
 - expanded selected-log detail output with execution path, phase timeline, last payload snapshot, stored result, and upload result sections

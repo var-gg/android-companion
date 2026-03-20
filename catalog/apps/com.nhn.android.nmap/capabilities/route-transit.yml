@@ -24,7 +24,7 @@ capability:
 
   expected_outcome:
     landing: "route_public_transit"
-    fallback_behavior: "Transit options may vary by coverage, time, and region"
+    fallback_behavior: "Transit options may vary by coverage, time, region, app version, and NAVER Map's own route chooser behavior; initial visible tab is not guaranteed from current evidence"
 
   risk:
     side_effect_class: "navigation_only"
@@ -33,7 +33,7 @@ capability:
 
   status:
     evidence: "mixed"
-    runtime: "resolves_only"
+    runtime: "mixed"
     freshness: "fresh"
 
   confidence: "medium"
@@ -137,12 +137,12 @@ capability:
 
   open_questions:
     - "Are all start-point fields truly mandatory, or can NAVER Map infer origin from current location when omitted?"
-    - "Does route/public always land on public transit, or can it switch to a broader route chooser depending on app version?"
+    - "How does route/public behave across app versions when NAVER Map chooses a different initial visible tab than expected?"
     - "How does the route behave when coordinates and names disagree?"
-    - "Is there separate subway-specific behavior worth modeling beyond generic public transit?"
+    - "Is there any stable, documented subway-specific selector worth modeling beyond generic public transit?"
 
   verification:
-    last_verified_at: "2026-03-19T16:54:00+09:00"
+    last_verified_at: "2026-03-20T13:35:00+09:00"
     samples:
       - app_version_name: "6.4.0.7"
         app_version_code: 60400006
@@ -153,6 +153,15 @@ capability:
         login_state: null
         region: "KR"
         result: "Intent delivered and executed successfully via remote polling bridge; route landing still requires visual confirmation"
+      - app_version_name: null
+        app_version_code: null
+        android_api_level: null
+        android_release: null
+        device_model: null
+        locale: "ko-KR"
+        login_state: null
+        region: "KR"
+        result: "User observation: recent launches could still open with the driving tab selected; current evidence does not justify promising initial transit/subway tab control"
 
   evidence:
     - id: "official-doc-url-scheme"
@@ -165,6 +174,13 @@ capability:
       path: "../evidence/2026-03-19-remote-intent-smoke-test.md"
       url: null
       observed_at: "2026-03-19T16:54:00+09:00"
+    - id: "route-mode-observation-20260320"
+      type: "community_report"
+      path: "../evidence/2026-03-20-route-mode-observation.md"
+      url: null
+      observed_at: "2026-03-20T13:35:00+09:00"
 
   notes:
+    - "The documented route/public path is still the best available transit-family surface."
+    - "Do not guarantee initial subway/transit tab selection until device evidence proves a stable selector."
     - "Can later split subway/bus-specific behavior if runtime differences matter."

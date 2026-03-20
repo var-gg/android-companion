@@ -12,6 +12,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         remoteUiStateStore = RemoteUiStateStore(this)
 
         setupSections()
+        setupNestedScrollHandoff()
         setupLanguageControls()
         setupPermissionControls()
         setupButtons()
@@ -130,6 +132,16 @@ class MainActivity : AppCompatActivity() {
         binding.navConnectButton.setOnClickListener { showSection(SECTION_CONNECT) }
         binding.navLogsButton.setOnClickListener { showSection(SECTION_LOGS) }
         binding.navOpsButton.setOnClickListener { showSection(SECTION_OPS) }
+    }
+
+    private fun setupNestedScrollHandoff() {
+        binding.recentLogsScroll.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> view.parent?.requestDisallowInterceptTouchEvent(true)
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> view.parent?.requestDisallowInterceptTouchEvent(false)
+            }
+            false
+        }
     }
 
     private fun showSection(section: String) {
