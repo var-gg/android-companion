@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.0-alpha18
+- replaced the notification tap broadcast path with a dedicated transparent intent proxy activity so notification-mediated `open_intent` launches transition more directly into the target app with less visible companion UI flash
+- added explicit notification tap / launch-attempted / launch-succeeded-or-failed telemetry markers for the proxy-based execution path
+- kept `open_intent` delivery routing behavior (`direct | notify | auto`) unchanged while tightening the notification path implementation for Android policy compliance
+- bumped app version to 0.2.0-alpha18
+
 ## v0.2.0-alpha17
 - added notification-mediated `open_intent` delivery via notification tap/actions for background-safe intent execution
 - added `delivery_policy` routing for `open_intent` with `direct | notify | auto`, where `auto` chooses notification delivery when the app is not foreground

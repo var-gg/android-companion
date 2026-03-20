@@ -93,6 +93,7 @@ class IntentLaunchReceiver : BroadcastReceiver() {
 
         const val PHASE_NOTIFICATION_POSTED = "notification_posted"
         const val PHASE_NOTIFICATION_TAPPED = "notification_tapped"
+        const val PHASE_NOTIFICATION_LAUNCH_ATTEMPTED = "notification_launch_attempted"
         const val PHASE_NOTIFICATION_LAUNCHED = "notification_launched"
         const val PHASE_NOTIFICATION_TAP_FAILED = "notification_tap_failed"
         const val STATE_ACTION_REQUIRED = "action_required"

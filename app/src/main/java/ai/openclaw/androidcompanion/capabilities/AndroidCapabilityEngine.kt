@@ -437,18 +437,19 @@ class AndroidCapabilityEngine(
             ?: command.requestId
             ?: "intent-${System.currentTimeMillis()}"
         val notificationId = computeNotificationId(logId)
-        val receiverIntent = Intent(context, IntentLaunchReceiver::class.java).apply {
-            action = IntentLaunchReceiver.ACTION_LAUNCH_INTENT
-            putExtra(IntentLaunchReceiver.EXTRA_TARGET_INTENT, Intent(targetIntent))
-            putExtra(IntentLaunchReceiver.EXTRA_LOG_ID, logId)
-            putExtra(IntentLaunchReceiver.EXTRA_NOTIFICATION_ID, notificationId)
-            putExtra(IntentLaunchReceiver.EXTRA_COMMAND_ACTION, command.action)
-            putExtra(IntentLaunchReceiver.EXTRA_REQUEST_ID, command.requestId)
+        val launchProxyIntent = Intent(context, IntentLaunchProxyActivity::class.java).apply {
+            action = IntentLaunchProxyActivity.ACTION_LAUNCH_INTENT
+            putExtra(IntentLaunchProxyActivity.EXTRA_TARGET_INTENT, Intent(targetIntent))
+            putExtra(IntentLaunchProxyActivity.EXTRA_LOG_ID, logId)
+            putExtra(IntentLaunchProxyActivity.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(IntentLaunchProxyActivity.EXTRA_COMMAND_ACTION, command.action)
+            putExtra(IntentLaunchProxyActivity.EXTRA_REQUEST_ID, command.requestId)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or Intent.FLAG_ACTIVITY_NO_ANIMATION)
         }
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = PendingIntent.getActivity(
             context,
             notificationId,
-            receiverIntent,
+            launchProxyIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 

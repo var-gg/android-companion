@@ -74,6 +74,8 @@ Representative response fields for `open_intent`:
 
 Notification-mediated execution is intentionally modeled as a valid outcome rather than a failure when user action is still pending.
 
+Implementation note: notification taps are funneled through a transparent, no-history proxy activity rather than a broadcast trampoline so Android can treat the tap as a foreground user-driven launch while the app still records tap / launch-attempted / launch-completed telemetry.
+
 ## Notable response conventions
 - `ok: false` always indicates machine-checkable failure
 - `error.code` is intended to be stable-ish across minor app changes

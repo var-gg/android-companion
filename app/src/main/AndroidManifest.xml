@@ -46,6 +46,13 @@
             android:name=".capabilities.IntentLaunchReceiver"
             android:exported="false" />
         <activity
+            android:name=".capabilities.IntentLaunchProxyActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:finishOnTaskLaunch="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.AndroidCompanion.IntentProxy" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

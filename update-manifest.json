@@ -1,10 +1,10 @@
 {
-  "tag_name": "v0.2.0-alpha17",
-  "version_name": "0.2.0-alpha17",
-  "version_code": 18,
-  "min_supported_version_code": 17,
+  "tag_name": "v0.2.0-alpha18",
+  "version_name": "0.2.0-alpha18",
+  "version_code": 19,
+  "min_supported_version_code": 18,
   "force_update": false,
-  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha17/android-companion-v0.2.0-alpha17.apk",
-  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha17",
-  "notes": "Adds notification-mediated open_intent delivery, auto/direct/notify routing, and richer direct-vs-notification execution telemetry for background intent handling."
+  "apk_url": "https://github.com/var-gg/android-companion/releases/download/v0.2.0-alpha18/android-companion-v0.2.0-alpha18.apk",
+  "release_url": "https://github.com/var-gg/android-companion/releases/tag/v0.2.0-alpha18",
+  "notes": "Replaces the notification tap broadcast path with a transparent proxy activity for more direct target-app transitions and richer notification tap launch telemetry."
 }
